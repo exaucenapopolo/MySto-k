@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>sto€k> - Kdo informatique et technologie</title>
+    <title>Tableau de bord - MySto€k</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .navbar-brand { font-weight: 800; font-size: 1.5rem; letter-spacing: 1px; }
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; position: relative; padding-bottom: 80px; min-height: 100vh;}
+        .navbar-brand { font-weight: 800; font-size: 1.5rem; letter-spacing: 1px; display: flex; align-items: center; gap: 10px;}
+        .navbar-brand img { height: 35px; }
         .card { border: none; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .dashboard-card { transition: transform 0.2s; }
         .dashboard-card:hover { transform: translateY(-5px); }
@@ -19,17 +20,21 @@
         .nav-tabs .nav-link.active { color: #0d6efd; border-bottom: 3px solid #0d6efd; }
         .sub-stat { font-size: 0.8rem; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px; margin-right: 5px; display: inline-block; margin-top: 5px;}
         #pdf-report-container { padding: 20px; background: #fff; }
+        .fab-btn { position: fixed; bottom: 20px; right: 20px; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: transform 0.2s; }
+        .fab-btn:hover { transform: scale(1.05); }
     </style>
 </head>
 <body>
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
         <div class="container-fluid px-4">
-            <a class="navbar-brand text-primary" href="#"><i class="bi bi-box-seam"></i> sto€k></a>
-            <span class="navbar-text text-light fw-bold ms-3 border-start ps-3 d-none d-md-block">
-                Kdo informatique et technologie - Gestion Premium v4
+            <a class="navbar-brand text-primary" href="#">
+                <img src="https://raw.githubusercontent.com/exaucenapopolo/MySto-k/refs/heads/main/logo%20mystok.png" alt="Logo" crossorigin="anonymous">
+                MySto€k
+            </a>
+            <span class="navbar-text text-light fw-bold ms-3 border-start ps-3 d-none d-md-block fst-italic">
+                Gestion de stock intelligente et sécurisée
             </span>
-            <!-- Section Profil Utilisateur -->
             <div class="ms-auto d-flex align-items-center">
                 <span class="text-light me-3 small"><i class="bi bi-person-circle text-primary me-1"></i> <span id="navUserName" class="fw-bold text-white">Chargement...</span></span>
                 <button class="btn btn-outline-danger btn-sm" id="btnLogout"><i class="bi bi-box-arrow-right me-1"></i>Déconnexion</button>
@@ -54,7 +59,6 @@
         </div>
     </div>
 
-    <!-- RESTE DU DASHBOARD INCHANGÉ JUSQU'AU PDF -->
     <div class="container-fluid px-4">
         
         <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist">
@@ -118,7 +122,7 @@
                             <h5 class="mb-4 text-primary"><i class="bi bi-plus-circle me-2"></i>Nouveau Produit</h5>
                             <form id="productForm">
                                 <div class="mb-3">
-                                    <label class="form-label text-muted small fw-bold">Référence (Chiffres uniquement)</label>
+                                    <label class="form-label text-muted small fw-bold">Référence</label>
                                     <input type="text" id="pRef" class="form-control form-control-sm" placeholder="Ex: 0035" required>
                                 </div>
                                 <div class="mb-3">
@@ -203,25 +207,28 @@
                     <div class="col-md-12">
                         <div class="card p-3 bg-white d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                             <div class="d-flex align-items-center flex-wrap gap-2">
-                                <span class="fw-bold text-muted me-2"><i class="bi bi-funnel me-1"></i>Période du rapport :</span>
+                                <span class="fw-bold text-muted me-2"><i class="bi bi-funnel me-1"></i>Période :</span>
                                 <select id="reportFilter" class="form-select form-select-sm d-inline-block w-auto" onchange="handleFilterChange()">
                                     <option value="today">Aujourd'hui</option>
                                     <option value="yesterday">Hier</option>
                                     <option value="week">7 derniers jours</option>
                                     <option value="month">Ce Mois</option>
-                                    <option value="custom">Date spécifique / personnalisée</option>
+                                    <option value="custom">Date spécifique</option>
                                 </select>
                                 <input type="date" id="customDateInput" class="form-control form-control-sm d-none w-auto" onchange="displaySales()">
                             </div>
                             <div class="d-flex gap-2 flex-wrap">
+                                <button class="btn btn-sm btn-info text-white" data-bs-toggle="modal" data-bs-target="#transferModal" onclick="populateTransferSelect()">
+                                    <i class="bi bi-truck me-1"></i>Transférer du Stock
+                                </button>
                                 <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#expenseModal">
-                                    <i class="bi bi-box-arrow-right me-1"></i>Enregistrer une Dépense / Facture
+                                    <i class="bi bi-box-arrow-right me-1"></i>Sortie / Dépense
                                 </button>
                                 <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#bankModal">
-                                    <i class="bi bi-bank me-1"></i>Enregistrer un Versement Banque
+                                    <i class="bi bi-bank me-1"></i>Versement Banque
                                 </button>
                                 <button class="btn btn-sm btn-dark" onclick="downloadPDFReport()">
-                                    <i class="bi bi-file-earmark-pdf me-1"></i>Télécharger le Rapport PDF pour le Boss
+                                    <i class="bi bi-file-earmark-pdf me-1"></i>Rapport PDF (Admin)
                                 </button>
                             </div>
                         </div>
@@ -244,8 +251,8 @@
                         </div>
                     </div>
                     <div class="col-md-4 mb-3">
-                        <div class="card bg-info text-white p-3 text-center" title="Ce montant concerne UNIQUEMENT la période sélectionnée">
-                            <h6 class="text-white-50 text-uppercase small">Bilan Financier de la Période</h6>
+                        <div class="card bg-info text-white p-3 text-center">
+                            <h6 class="text-white-50 text-uppercase small">Bilan Financier Période</h6>
                             <h3 id="netDisplay" class="mb-0 fw-bold">0 XAF</h3>
                             <small class="text-white-50">Recettes moins Sorties globales</small>
                         </div>
@@ -278,11 +285,11 @@
                     </div>
 
                     <div class="col-xl-5 mb-4">
-                        <div class="card p-0 mb-3" style="max-height: 300px;">
+                        <div class="card p-0 mb-3" style="max-height: 250px;">
                             <div class="card-header bg-light p-3">
-                                <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-receipt text-danger me-2"></i>Factures & Sorties Diverses</h6>
+                                <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-receipt text-danger me-2"></i>Factures & Dépenses</h6>
                             </div>
-                            <div class="table-responsive" style="overflow-y: auto; max-height: 240px;">
+                            <div class="table-responsive" style="overflow-y: auto; max-height: 190px;">
                                 <table class="table table-hover align-middle mb-0">
                                     <thead class="table-light text-muted sticky-top">
                                         <tr>
@@ -297,21 +304,40 @@
                             </div>
                         </div>
 
-                        <div class="card p-0 shadow-sm" style="max-height: 300px;">
+                        <div class="card p-0 mb-3" style="max-height: 250px;">
                             <div class="card-header bg-light p-3">
-                                <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-bank text-primary me-2"></i>Versements effectues en Banque</h6>
+                                <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-bank text-primary me-2"></i>Versements en Banque</h6>
                             </div>
-                            <div class="table-responsive" style="overflow-y: auto; max-height: 240px;">
+                            <div class="table-responsive" style="overflow-y: auto; max-height: 190px;">
                                 <table class="table table-hover align-middle mb-0">
                                     <thead class="table-light text-muted sticky-top">
                                         <tr>
                                             <th>Date</th>
-                                            <th>Référence / Banque</th>
+                                            <th>Banque / Réf</th>
                                             <th class="text-end">Montant</th>
                                             <th class="text-center">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody id="bankTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="card p-0 shadow-sm" style="max-height: 250px;">
+                            <div class="card-header bg-light p-3">
+                                <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-truck text-info me-2"></i>Articles Transférés (Autre Agence)</h6>
+                            </div>
+                            <div class="table-responsive" style="overflow-y: auto; max-height: 190px;">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light text-muted sticky-top">
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Agence Cible</th>
+                                            <th>Produit</th>
+                                            <th class="text-center">Qté</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="transfersTableBody"></tbody>
                                 </table>
                             </div>
                         </div>
@@ -322,7 +348,10 @@
         </div>
     </div>
 
-    <!-- MODALS INCHANGÉS -->
+    <a href="rapport.html" class="btn btn-dark text-white rounded-pill px-4 py-2 fab-btn">
+        <i class="bi bi-file-person me-2"></i>Rapport Personnel
+    </a>
+
     <div class="modal fade" id="saleModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -366,7 +395,7 @@
                     <div class="mb-3">
                         <label class="form-label fw-bold">Modifier la quantité vendue</label>
                         <input type="number" id="editSaleQuantity" class="form-control" min="1">
-                        <small class="text-muted">L'application réajustera automatiquement les stocks du magasin.</small>
+                        <small class="text-muted">Le stock sera réajusté automatiquement.</small>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Modifier le prix unitaire (XAF)</label>
@@ -385,7 +414,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title"><i class="bi bi-box-arrow-right me-2"></i>Nouvelle Sortie d'Argent (Hors Ventes)</h5>
+                    <h5 class="modal-title"><i class="bi bi-box-arrow-right me-2"></i>Nouvelle Dépense</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -395,12 +424,12 @@
                             <input type="date" id="expDate" class="form-control" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Motif / Description précise de la facture</label>
-                            <input type="text" id="expDesc" class="form-control" placeholder="Ex: Facture électricité, Achat rame de papier..." required>
+                            <label class="form-label fw-bold">Motif / Description précise</label>
+                            <input type="text" id="expDesc" class="form-control" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold">Montant total décaissé (XAF)</label>
-                            <input type="number" id="expAmount" class="form-control" min="1" placeholder="Ex: 15000" required>
+                            <input type="number" id="expAmount" class="form-control" min="1" required>
                         </div>
                         <div class="text-end">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
@@ -416,22 +445,22 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title"><i class="bi bi-bank me-2"></i>Nouveau Versement en Banque</h5>
+                    <h5 class="modal-title"><i class="bi bi-bank me-2"></i>Versement en Banque</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="bankForm">
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Date du dépôt bancaire</label>
+                            <label class="form-label fw-bold">Date du dépôt</label>
                             <input type="date" id="bankDate" class="form-control" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Référence du bordereau / Nom de la Banque</label>
-                            <input type="text" id="bankDesc" class="form-control" placeholder="Ex: Versement Afriland Bordereau N°9934" required>
+                            <label class="form-label fw-bold">Référence / Banque</label>
+                            <input type="text" id="bankDesc" class="form-control" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Montant transféré en compte (XAF)</label>
-                            <input type="number" id="bankAmount" class="form-control" min="1" placeholder="Ex: 500000" required>
+                            <label class="form-label fw-bold">Montant (XAF)</label>
+                            <input type="number" id="bankAmount" class="form-control" min="1" required>
                         </div>
                         <div class="text-end">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
@@ -443,12 +472,47 @@
         </div>
     </div>
 
-    <!-- STRUCTURE DU PDF MISE À JOUR -->
+    <div class="modal fade" id="transferModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title"><i class="bi bi-truck me-2"></i>Transférer du Stock (Autre Agence)</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="transferForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Date du transfert</label>
+                            <input type="date" id="transferDate" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Agence de Destination</label>
+                            <input type="text" id="transferDestination" class="form-control" placeholder="Ex: Agence Douala Akwa" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Sélectionner l'article</label>
+                            <select id="transferProduct" class="form-select" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Quantité à transférer</label>
+                            <input type="number" id="transferQuantity" class="form-control" min="1" value="1" required>
+                        </div>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                            <button type="submit" class="btn btn-info text-white">Valider le transfert</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="pdf-report-container" class="d-none" style="font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; color: #333;">
         
         <div style="text-align: center; border-bottom: 4px solid #f39c12; padding-bottom: 15px; margin-bottom: 20px; background-color: #fdfaf6; padding-top: 20px; border-radius: 8px 8px 0 0;">
-            <h2 style="color: #d35400; margin: 0; font-weight: 800; text-transform: uppercase;">Kdo informatique et technologie</h2>
-            <!-- NOM DU TRAVAILLEUR BIEN VISIBLE EN HAUT -->
+            <img src="https://raw.githubusercontent.com/exaucenapopolo/MySto-k/refs/heads/main/logo%20mystok.png" alt="MySto€k Logo" crossorigin="anonymous" style="height: 50px; margin-bottom: 10px;">
+            <h2 style="color: #2c3e50; margin: 0; font-weight: 800;">MySto€k</h2>
+            
             <h5 style="color: #2980b9; margin-top: 5px; font-weight: bold;">Géré et édité par : <span id="pdfTopUserName"></span></h5>
             <h4 style="margin-top: 10px; color: #2c3e50;">RAPPORT DE COMPTABILITÉ - AGENCE : <span id="pdfAgencyLabel" style="color: #2980b9;"></span></h4>
             <div style="display: inline-block; background-color: #f39c12; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; margin-top: 10px;">
@@ -465,44 +529,38 @@
                     <td id="pdfInitialCash" style="border: 1px solid #ddd; padding: 10px; text-align: right; font-weight: bold;"></td>
                 </tr>
                 <tr>
-                    <td style="border: 1px solid #ddd; padding: 10px; font-weight: bold; background-color: #e8f6e9; color: #2c3e50;">SOLDE ACTUEL PHYSIQUE EN CAISSE <br><small style="font-weight: normal; font-size: 0.8em; color: #555;">(Total de l'argent physique depuis le début)</small></td>
+                    <td style="border: 1px solid #ddd; padding: 10px; font-weight: bold; background-color: #e8f6e9; color: #2c3e50;">SOLDE ACTUEL PHYSIQUE EN CAISSE</td>
                     <td id="pdfGlobalCashDesk" style="border: 1px solid #ddd; padding: 10px; text-align: right; font-weight: bold; color: #27ae60; background-color: #e8f6e9; font-size: 1.1rem;"></td>
                 </tr>
             </table>
         </div>
 
         <div style="margin-bottom: 30px;">
-            <h3 style="color: #2c3e50; border-left: 5px solid #8e44ad; padding-left: 10px;">2. RÉSUMÉ DE LA PÉRIODE SÉLECTIONNÉE</h3>
+            <h3 style="color: #2c3e50; border-left: 5px solid #8e44ad; padding-left: 10px;">2. RÉSUMÉ FINANCIER DE LA PÉRIODE SÉLECTIONNÉE</h3>
             <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-                <tr style="background-color: #8e44ad; color: white;">
-                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Indicateur financier (Sur les dates choisies)</th>
-                    <th style="border: 1px solid #ddd; padding: 10px; text-align: right;">Valeur</th>
-                </tr>
                 <tr>
-                    <td style="border: 1px solid #ddd; padding: 10px;">Chiffre d'Affaires Brut (Ventes de la période)</td>
+                    <td style="border: 1px solid #ddd; padding: 10px;">Chiffre d'Affaires Brut (Ventes)</td>
                     <td id="pdfRevenue" style="border: 1px solid #ddd; padding: 10px; text-align: right; font-weight: bold; color: #27ae60;"></td>
                 </tr>
                 <tr>
-                    <td style="border: 1px solid #ddd; padding: 10px;">Total Sorties Comptables (Charges + Flux Bancaires)</td>
+                    <td style="border: 1px solid #ddd; padding: 10px;">Total Sorties (Dépenses + Banque)</td>
                     <td id="pdfExpenses" style="border: 1px solid #ddd; padding: 10px; text-align: right; font-weight: bold; color: #c0392b;"></td>
                 </tr>
                 <tr style="background-color: #f4f6f7;">
-                    <td style="border: 1px solid #ddd; padding: 10px; font-weight: bold;">BILAN FINANCIER DE LA PÉRIODE</td>
+                    <td style="border: 1px solid #ddd; padding: 10px; font-weight: bold;">BILAN DE LA PÉRIODE</td>
                     <td id="pdfNet" style="border: 1px solid #ddd; padding: 10px; text-align: right; font-weight: bold; font-size: 1.1rem;"></td>
                 </tr>
             </table>
         </div>
 
         <div id="pdf-sales-section" style="margin-bottom: 30px;">
-            <h3 style="color: #2c3e50; border-left: 5px solid #27ae60; padding-left: 10px;">3. JOURNAL DES VENTES DÉTAILLÉ</h3>
+            <h3 style="color: #2c3e50; border-left: 5px solid #27ae60; padding-left: 10px;">3. JOURNAL DES VENTES</h3>
             <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem;">
                 <thead>
                     <tr style="background-color: #27ae60; color: white;">
-                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Date & Heure</th>
-                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Réf</th>
-                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Désignation Produit</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Date</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Article</th>
                         <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Qté</th>
-                        <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">P.U (XAF)</th>
                         <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Total (XAF)</th>
                     </tr>
                 </thead>
@@ -511,57 +569,89 @@
         </div>
 
         <div id="pdf-expenses-section" style="margin-bottom: 30px;">
-            <h3 style="color: #2c3e50; border-left: 5px solid #c0392b; padding-left: 10px;">4. JOURNAL DES SORTIES & FACTURES DE LA PÉRIODE</h3>
+            <h3 style="color: #2c3e50; border-left: 5px solid #c0392b; padding-left: 10px;">4. JOURNAL DES DÉPENSES</h3>
             <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem;">
-                <thead>
-                    <tr style="background-color: #c0392b; color: white;">
-                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Date</th>
-                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Description de la facture / Sortie</th>
-                        <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Montant (XAF)</th>
-                    </tr>
-                </thead>
                 <tbody id="pdfExpensesTableBody"></tbody>
             </table>
         </div>
 
         <div id="pdf-bank-section" style="margin-bottom: 30px;">
-            <h3 style="color: #2c3e50; border-left: 5px solid #2980b9; padding-left: 10px;">5. SUIVI DES VERSEMENTS EN BANQUE DE LA PÉRIODE</h3>
+            <h3 style="color: #2c3e50; border-left: 5px solid #2980b9; padding-left: 10px;">5. VERSEMENTS BANCAIRES</h3>
             <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem;">
-                <thead>
-                    <tr style="background-color: #2980b9; color: white;">
-                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Date</th>
-                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Bordereau / Destination de versement</th>
-                        <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Montant Déposé (XAF)</th>
-                    </tr>
-                </thead>
                 <tbody id="pdfBankTableBody"></tbody>
             </table>
         </div>
 
+        <div id="pdf-transfers-section" style="margin-bottom: 30px;">
+            <h3 style="color: #2c3e50; border-left: 5px solid #17a2b8; padding-left: 10px;">6. MOUVEMENTS : ARTICLES TRANSFÉRÉS</h3>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem;">
+                <thead>
+                    <tr style="background-color: #17a2b8; color: white;">
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Date</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Agence Cible</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Produit Transféré</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Qté</th>
+                    </tr>
+                </thead>
+                <tbody id="pdfTransfersTableBody"></tbody>
+            </table>
+        </div>
+
         <div style="margin-top: 40px; text-align: center; font-size: 0.8rem; color: #95a5a6; border-top: 1px solid #ecf0f1; padding-top: 15px;">
-            <p style="margin: 0;">Généré par <strong>sto€k></strong> - Gestion Premium</p>
-            <p style="margin: 0; font-style: italic;">Solution logicielle pour Kdo informatique et technologie</p>
-            <!-- NOM DU TRAVAILLEUR EN BAS DE PAGE (Discret) -->
+            <p style="margin: 0;">Généré par <strong>MySto€k</strong> - Gestion de stock intelligente et sécurisée</p>
             <p style="margin-top: 10px; font-size: 0.7rem; color: #bdc3c7;">Opérateur système : <span id="pdfBottomUserName"></span></p>
         </div>
 
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- TON SCRIPT EXISTANT -->
+
     <script>
-        // Ton code existant pour les variables
-        let myStock = JSON.parse(localStorage.getItem('stoek_premium_inventory')) || [];
+        // LE STOCK INITIAL DEMANDÉ POUR TOUTE NOUVELLE AGENCE
+        const initialExcelDatabase = [
+            { ref: "0001", name: "Lenovo 300e 180Go / 4 Go / 1,10 GHz / Tactlle", category: "Laptop", quantity: 3, price: 70000, status: "Normal" },
+            { ref: "0002", name: "Lenovo X220 320Go / 4Go / 2,60 GHz / i5", category: "Laptop", quantity: 1, price: 90000, status: "Normal" },
+            { ref: "0003", name: "Lenovo X230 500Go / 8Go / 2,60 GHz / i5", category: "Laptop", quantity: 1, price: 90000, status: "Normal" },
+            { ref: "0004", name: "Lenovo 320Go / 8Ram / 2,40 GHz / i5", category: "Laptop", quantity: 1, price: 90000, status: "Normal" },
+            { ref: "0005", name: "Dell 3340 500Go / 8Go / 1,70 GHz /Tatile / i3", category: "Laptop", quantity: 10, price: 90000, status: "Normal" },
+            { ref: "0006", name: "Dell 3350 500Go / 8Go / 1,70 GHz / i3", category: "Laptop", quantity: 5, price: 90000, status: "Normal" },
+            { ref: "0007", name: "Dell E5570 500Go / 8Go / 2,40 GHz / i5", category: "Laptop", quantity: 1, price: 90000, status: "Normal" },
+            { ref: "0008", name: "Dell 3300 / 500Go / 8Go / 1,80 GHz", category: "Laptop", quantity: 4, price: 90000, status: "Normal" },
+            { ref: "0009", name: "HP Probook 320 G0 / 8Go / 2,40 GHz", category: "Laptop", quantity: 8, price: 90000, status: "Normal" },
+            { ref: "0010", name: "Acer N16Q1 / 750 GO / 8Go / 1,80 GHz / i5", category: "Laptop", quantity: 2, price: 110000, status: "Normal" },
+            { ref: "0011", name: "Acer Chrome / 1280Go / 4Go /1,10", category: "Laptop", quantity: 2, price: 40000, status: "Normal" },
+            { ref: "0012", name: "Acer Chrome / 1280Go / 4Go /1,11", category: "Laptop", quantity: 10, price: 0, status: "Défectueux" },
+            { ref: "0013", name: "Ecouteur bluethoot wireless", category: "Consommables", quantity: 11, price: 6000, status: "Normal" },
+            { ref: "0014", name: "Ecouteur bluethoot airpod", category: "Consommables", quantity: 4, price: 7000, status: "Normal" },
+            { ref: "0015", name: "Tablette", category: "Consommables", quantity: 1, price: 55000, status: "Normal" },
+            { ref: "0016", name: "Montre connecté", category: "Consommables", quantity: 1, price: 10000, status: "Normal" },
+            { ref: "0017", name: "Montre connecté", category: "Consommables", quantity: 1, price: 0, status: "Défectueux" },
+            { ref: "0018", name: "Clé Usb", category: "Consommables", quantity: 12, price: 3000, status: "Normal" },
+            { ref: "0019", name: "Power band", category: "Consommables", quantity: 5, price: 10000, status: "Normal" },
+            { ref: "0020", name: "chargeur téléphone", category: "Consommables", quantity: 4, price: 2000, status: "Normal" },
+            { ref: "0021", name: "Boitier DD", category: "Consommables", quantity: 20, price: 3000, status: "Normal" },
+            { ref: "0022", name: "DD 2 Terra", category: "Consommables", quantity: 2, price: 45000, status: "Normal" },
+            { ref: "0023", name: "DD 750 Go", category: "Consommables", quantity: 11, price: 15000, status: "Normal" },
+            { ref: "0024", name: "DD 500 Go", category: "Consommables", quantity: 9, price: 12000, status: "Normal" },
+            { ref: "0025", name: "DD 320 Go", category: "Consommables", quantity: 5, price: 10000, status: "Normal" },
+            { ref: "0026", name: "clé Bluethoot V5.0", category: "Consommables", quantity: 22, price: 0, status: "Normal" },
+            { ref: "0027", name: "Téléphone Huawei", category: "Téléphone", quantity: 9, price: 25000, status: "Normal" },
+            { ref: "0028", name: "Téléphone Huawei", category: "Téléphone", quantity: 3, price: 0, status: "Défectueux" }
+        ];
+
+        // Initialisation des données locales (Si vide, charge la DB initiale)
+        let myStock = JSON.parse(localStorage.getItem('stoek_premium_inventory')) || [...initialExcelDatabase];
         let mySales = JSON.parse(localStorage.getItem('stoek_premium_sales')) || [];
         let myExpenses = JSON.parse(localStorage.getItem('stoek_premium_expenses')) || [];
         let myBankDeposits = JSON.parse(localStorage.getItem('stoek_premium_bank_deposits')) || [];
+        let myTransfers = JSON.parse(localStorage.getItem('stoek_premium_transfers')) || [];
 
         // Modals
         const bootstrapSaleModal = new bootstrap.Modal(document.getElementById('saleModal'));
         const bootstrapEditSaleModal = new bootstrap.Modal(document.getElementById('editSaleModal'));
         const bootstrapExpenseModal = new bootstrap.Modal(document.getElementById('expenseModal'));
         const bootstrapBankModal = new bootstrap.Modal(document.getElementById('bankModal'));
+        const bootstrapTransferModal = new bootstrap.Modal(document.getElementById('transferModal'));
 
         const formatCurrency = (amount) => new Intl.NumberFormat('fr-FR').format(amount) + " XAF";
 
@@ -587,6 +677,7 @@
             const totalAllExpenses = myExpenses.reduce((sum, item) => sum + item.amount, 0);
             const totalAllBankDeposits = myBankDeposits.reduce((sum, item) => sum + item.amount, 0);
             
+            // Les transferts ne modifient pas l'argent de la caisse.
             const currentCashDesk = initialCash + totalAllSales - totalAllExpenses - totalAllBankDeposits;
             
             document.getElementById('globalCashDeskDisplay').innerText = formatCurrency(currentCashDesk);
@@ -649,7 +740,7 @@
                     <td class="text-end fw-bold text-primary">${formatCurrency(totalRowValue)}</td>
                     <td class="text-center">
                         <button class="btn btn-success btn-sm ${product.status === 'Défectueux' ? 'disabled' : ''}" onclick="openSaleModal(${idx})">
-                            <i class="bi bi-cart-plus me-1"></i>Vendre
+                            <i class="bi bi-cart-plus"></i> Vendre
                         </button>
                         <button class="btn btn-outline-danger btn-sm ms-1" onclick="deleteProduct(${idx})"><i class="bi bi-trash"></i></button>
                     </td>
@@ -677,7 +768,7 @@
 
         window.openSaleModal = function(idx) {
             const p = myStock[idx];
-            if(p.quantity <= 0) { alert("Stock insuffisant en magasin !"); return; }
+            if(p.quantity <= 0) { alert("Stock insuffisant !"); return; }
             document.getElementById('saleItemIndex').value = idx;
             document.getElementById('saleItemName').innerText = p.name;
             document.getElementById('saleItemStock').innerText = p.quantity;
@@ -695,7 +786,7 @@
             if(qty > 0 && qty <= p.quantity) {
                 p.quantity -= qty;
                 const record = {
-                    id: 'sale_' + Date.now() + Math.random().toString(36).substr(2, 5),
+                    id: 'sale_' + Date.now(),
                     date: new Date().toISOString(),
                     ref: p.ref,
                     name: p.name,
@@ -711,6 +802,51 @@
             } else { alert("Quantité erronée ou insuffisante !"); }
         };
 
+        // GESTION DU TRANSFERT DE STOCK
+        window.populateTransferSelect = function() {
+            const select = document.getElementById('transferProduct');
+            select.innerHTML = '<option value="">-- Choisir l\'article --</option>';
+            myStock.forEach((p, idx) => {
+                if(p.quantity > 0) {
+                    select.innerHTML += `<option value="${idx}">${p.ref} - ${p.name} (Dispo: ${p.quantity})</option>`;
+                }
+            });
+        };
+
+        document.getElementById('transferForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const date = document.getElementById('transferDate').value;
+            const dest = document.getElementById('transferDestination').value;
+            const pIdx = document.getElementById('transferProduct').value;
+            const qty = parseInt(document.getElementById('transferQuantity').value);
+
+            if(pIdx === "") { alert("Veuillez sélectionner un article."); return; }
+            
+            const p = myStock[pIdx];
+
+            if(qty > 0 && qty <= p.quantity) {
+                p.quantity -= qty; // On déduit du stock local
+                
+                const transferRecord = {
+                    date: date,
+                    destination: dest,
+                    ref: p.ref,
+                    name: p.name,
+                    quantity: qty
+                };
+                
+                myTransfers.push(transferRecord);
+                localStorage.setItem('stoek_premium_transfers', JSON.stringify(myTransfers));
+                
+                bootstrapTransferModal.hide();
+                this.reset();
+                displayStock();
+                displaySales();
+            } else {
+                alert("Quantité invalide ou supérieure au stock disponible !");
+            }
+        });
+
         window.handleFilterChange = function() {
             const f = document.getElementById('reportFilter').value;
             const input = document.getElementById('customDateInput');
@@ -722,12 +858,9 @@
         window.displaySales = function() {
             const filter = document.getElementById('reportFilter').value;
             const customDate = document.getElementById('customDateInput').value;
-            const tbodySales = document.getElementById('salesTableBody');
-            tbodySales.innerHTML = '';
 
-            let totalRev = 0, itemsCount = 0;
+            let start = new Date(0), end = new Date(); end.setHours(23,59,59,999);
             const current = new Date();
-            let start = new Date(0), end = new Date(current.getTime() + 86400000);
 
             if(filter === 'today') {
                 start = new Date(); start.setHours(0,0,0,0);
@@ -743,73 +876,84 @@
                 end = new Date(customDate); end.setHours(23,59,59,999);
             }
 
+            // Ventes
+            const tbodySales = document.getElementById('salesTableBody');
+            tbodySales.innerHTML = '';
+            let totalRev = 0, itemsCount = 0;
             [...mySales].reverse().forEach(sale => {
                 const sDate = new Date(sale.date);
                 if(sDate >= start && sDate <= end) {
                     totalRev += sale.total;
                     itemsCount += sale.quantity;
-
-                    const row = document.createElement('tr');
-                    const fullTimeStr = sDate.toLocaleDateString('fr-FR') + ' à ' + sDate.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
-                    row.innerHTML = `
-                        <td class="text-muted small"><i class="bi bi-clock me-1"></i>${fullTimeStr}</td>
-                        <td class="fw-bold text-secondary">${sale.ref}</td>
-                        <td>${sale.name}</td>
-                        <td class="text-center fw-bold">${sale.quantity}</td>
-                        <td class="text-end">${formatCurrency(sale.price)}</td>
-                        <td class="text-end fw-bold text-success">${formatCurrency(sale.total)}</td>
-                        <td class="text-center">
-                            <button class="btn btn-outline-warning btn-sm py-0 px-1" onclick="openEditSaleModal('${sale.id}')" title="Modifier la vente"><i class="bi bi-pencil-square"></i></button>
-                            <button class="btn btn-outline-danger btn-sm py-0 px-1 ms-1" onclick="deleteSale('${sale.id}')" title="Annuler la vente"><i class="bi bi-x-circle"></i></button>
-                        </td>
+                    tbodySales.innerHTML += `
+                        <tr>
+                            <td class="text-muted small">${sDate.toLocaleDateString('fr-FR')} ${sDate.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})}</td>
+                            <td class="fw-bold text-secondary">${sale.ref}</td>
+                            <td>${sale.name}</td>
+                            <td class="text-center fw-bold">${sale.quantity}</td>
+                            <td class="text-end">${formatCurrency(sale.price)}</td>
+                            <td class="text-end fw-bold text-success">${formatCurrency(sale.total)}</td>
+                            <td class="text-center">
+                                <button class="btn btn-outline-warning btn-sm py-0 px-1" onclick="openEditSaleModal('${sale.id}')"><i class="bi bi-pencil-square"></i></button>
+                                <button class="btn btn-outline-danger btn-sm py-0 px-1 ms-1" onclick="deleteSale('${sale.id}')"><i class="bi bi-x-circle"></i></button>
+                            </td>
+                        </tr>
                     `;
-                    tbodySales.appendChild(row);
                 }
             });
 
+            // Dépenses
             const tbodyExp = document.getElementById('expensesTableBody');
             tbodyExp.innerHTML = '';
             let totalExp = 0, expLines = 0;
-
             myExpenses.forEach((exp, eIdx) => {
                 const eDate = new Date(exp.date);
                 if(eDate >= start && eDate <= end) {
-                    totalExp += exp.amount;
-                    expLines++;
-
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="text-muted small">${eDate.toLocaleDateString('fr-FR')}</td>
-                        <td><strong>${exp.description}</strong></td>
-                        <td class="text-end fw-bold text-danger">-${formatCurrency(exp.amount)}</td>
-                        <td class="text-center">
-                            <button class="btn btn-link link-danger p-0 border-0" onclick="deleteExpense(${eIdx})"><i class="bi bi-trash"></i></button>
-                        </td>
+                    totalExp += exp.amount; expLines++;
+                    tbodyExp.innerHTML += `
+                        <tr>
+                            <td class="text-muted small">${eDate.toLocaleDateString('fr-FR')}</td>
+                            <td><strong>${exp.description}</strong></td>
+                            <td class="text-end fw-bold text-danger">-${formatCurrency(exp.amount)}</td>
+                            <td class="text-center"><button class="btn btn-link link-danger p-0 border-0" onclick="deleteExpense(${eIdx})"><i class="bi bi-trash"></i></button></td>
+                        </tr>
                     `;
-                    tbodyExp.appendChild(row);
                 }
             });
 
+            // Banque
             const tbodyBank = document.getElementById('bankTableBody');
             tbodyBank.innerHTML = '';
             let totalBank = 0;
-
             myBankDeposits.forEach((bank, bIdx) => {
                 const bDate = new Date(bank.date);
                 if(bDate >= start && bDate <= end) {
-                    totalBank += bank.amount;
-                    expLines++; 
-
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="text-muted small">${bDate.toLocaleDateString('fr-FR')}</td>
-                        <td><strong class="text-primary">${bank.description}</strong></td>
-                        <td class="text-end fw-bold text-primary">-${formatCurrency(bank.amount)}</td>
-                        <td class="text-center">
-                            <button class="btn btn-link link-danger p-0 border-0" onclick="deleteBankDeposit(${bIdx})"><i class="bi bi-trash"></i></button>
-                        </td>
+                    totalBank += bank.amount; expLines++; 
+                    tbodyBank.innerHTML += `
+                        <tr>
+                            <td class="text-muted small">${bDate.toLocaleDateString('fr-FR')}</td>
+                            <td><strong class="text-primary">${bank.description}</strong></td>
+                            <td class="text-end fw-bold text-primary">-${formatCurrency(bank.amount)}</td>
+                            <td class="text-center"><button class="btn btn-link link-danger p-0 border-0" onclick="deleteBankDeposit(${bIdx})"><i class="bi bi-trash"></i></button></td>
+                        </tr>
                     `;
-                    tbodyBank.appendChild(row);
+                }
+            });
+
+            // Transferts (Affichage)
+            const tbodyTransfers = document.getElementById('transfersTableBody');
+            tbodyTransfers.innerHTML = '';
+            myTransfers.forEach((tr, tIdx) => {
+                const tDate = new Date(tr.date);
+                if(tDate >= start && tDate <= end) {
+                    tbodyTransfers.innerHTML += `
+                        <tr>
+                            <td class="text-muted small">${tDate.toLocaleDateString('fr-FR')}</td>
+                            <td><strong class="text-info">${tr.destination}</strong></td>
+                            <td class="small">${tr.name}</td>
+                            <td class="text-center fw-bold">${tr.quantity}</td>
+                        </tr>
+                    `;
                 }
             });
 
@@ -829,18 +973,17 @@
             calculateGlobalCashDesk();
         };
 
+        // Fonctions de suppression
         window.deleteSale = function(saleId) {
-            if(confirm("Voulez-vous vraiment annuler cette vente ? Le stock associé sera automatiquement restitué.")) {
+            if(confirm("Annuler cette vente ? Le stock sera restitué.")) {
                 const sIdx = mySales.findIndex(s => s.id === saleId);
                 if(sIdx !== -1) {
                     const sale = mySales[sIdx];
                     const pIdx = myStock.findIndex(p => p.ref === sale.ref);
                     if(pIdx !== -1) { myStock[pIdx].quantity += sale.quantity; }
-                    
                     mySales.splice(sIdx, 1);
                     localStorage.setItem('stoek_premium_sales', JSON.stringify(mySales));
-                    displayStock();
-                    displaySales();
+                    displayStock(); displaySales();
                 }
             }
         };
@@ -860,47 +1003,39 @@
             const sId = document.getElementById('editSaleId').value;
             const newQty = parseInt(document.getElementById('editSaleQuantity').value);
             const newPrice = parseFloat(document.getElementById('editSalePrice').value);
-
             const sIdx = mySales.findIndex(s => s.id === sId);
             if(sIdx !== -1 && newQty > 0) {
                 const sale = mySales[sIdx];
                 const pIdx = myStock.findIndex(p => p.ref === sale.ref);
-
                 if(pIdx !== -1) {
                     const p = myStock[pIdx];
-                    const currentTotalAvailableStock = p.quantity + sale.quantity;
-                    
-                    if(newQty <= currentTotalAvailableStock) {
-                        p.quantity = currentTotalAvailableStock - newQty;
+                    const stockMax = p.quantity + sale.quantity;
+                    if(newQty <= stockMax) {
+                        p.quantity = stockMax - newQty;
                         sale.quantity = newQty;
                         sale.price = newPrice;
                         sale.total = newQty * newPrice;
-
                         localStorage.setItem('stoek_premium_sales', JSON.stringify(mySales));
                         bootstrapEditSaleModal.hide();
-                        displayStock();
-                        displaySales();
-                    } else { alert("La quantité saisie dépasse les stocks physiques réels !"); }
+                        displayStock(); displaySales();
+                    } else { alert("Quantité dépasse le stock !"); }
                 }
             }
         };
 
         document.getElementById('expenseForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const newExp = {
+            myExpenses.push({
                 date: document.getElementById('expDate').value,
                 description: document.getElementById('expDesc').value,
                 amount: parseFloat(document.getElementById('expAmount').value)
-            };
-            myExpenses.push(newExp);
+            });
             localStorage.setItem('stoek_premium_expenses', JSON.stringify(myExpenses));
-            bootstrapExpenseModal.hide();
-            this.reset();
-            displaySales();
+            bootstrapExpenseModal.hide(); this.reset(); displaySales();
         });
 
         window.deleteExpense = function(idx) {
-            if(confirm("Confirmez-vous la suppression de cette ligne de charge ?")) {
+            if(confirm("Supprimer cette charge ?")) {
                 myExpenses.splice(idx, 1);
                 localStorage.setItem('stoek_premium_expenses', JSON.stringify(myExpenses));
                 displaySales();
@@ -909,32 +1044,45 @@
 
         document.getElementById('bankForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
             const currentCash = calculateGlobalCashDesk();
             const amountToDeposit = parseFloat(document.getElementById('bankAmount').value);
-
             if(amountToDeposit > currentCash) {
-                alert("ERREUR : Vous ne pouvez pas verser " + formatCurrency(amountToDeposit) + " car vous n'avez que " + formatCurrency(currentCash) + " en caisse actuellement.");
-                return;
+                alert("ERREUR : Fonds insuffisants en caisse."); return;
             }
-
-            const newDeposit = {
+            myBankDeposits.push({
                 date: document.getElementById('bankDate').value,
                 description: document.getElementById('bankDesc').value,
                 amount: amountToDeposit
-            };
-            myBankDeposits.push(newDeposit);
+            });
             localStorage.setItem('stoek_premium_bank_deposits', JSON.stringify(myBankDeposits));
-            bootstrapBankModal.hide();
-            this.reset();
-            displaySales();
+            bootstrapBankModal.hide(); this.reset(); displaySales();
         });
 
         window.deleteBankDeposit = function(idx) {
-            if(confirm("Confirmez-vous la suppression de cette ligne de versement bancaire ?")) {
+            if(confirm("Supprimer ce versement ?")) {
                 myBankDeposits.splice(idx, 1);
                 localStorage.setItem('stoek_premium_bank_deposits', JSON.stringify(myBankDeposits));
                 displaySales();
+            }
+        };
+
+        document.getElementById('productForm').addEventListener('submit', function(e) {
+            e.preventDefault(); 
+            myStock.unshift({
+                ref: document.getElementById('pRef').value,
+                name: document.getElementById('pName').value,
+                category: document.getElementById('pCategory').value,
+                quantity: parseInt(document.getElementById('pQuantity').value),
+                price: parseFloat(document.getElementById('pPrice').value),
+                status: document.getElementById('pStatus').value
+            });
+            displayStock(); this.reset(); 
+        });
+
+        window.deleteProduct = function(index) {
+            if(confirm("Supprimer définitivement cet article ?")) {
+                myStock.splice(index, 1);
+                displayStock();
             }
         };
 
@@ -948,110 +1096,51 @@
             let dateText = "Historique complet";
             const todayStr = new Date().toLocaleDateString('fr-FR');
             
-            if(filter === 'today') {
-                dateText = "Date du rapport : " + todayStr;
-            } else if(filter === 'yesterday') {
-                let d = new Date(); d.setDate(d.getDate()-1);
-                dateText = "Rapport de la journée du : " + d.toLocaleDateString('fr-FR');
-            } else if(filter === 'week') {
-                let d = new Date(); d.setDate(d.getDate()-7);
-                dateText = "Période : Du " + d.toLocaleDateString('fr-FR') + " au " + todayStr;
-            } else if(filter === 'month') {
-                let d = new Date();
-                let firstDay = new Date(d.getFullYear(), d.getMonth(), 1);
-                dateText = "Période Mensuelle : Du " + firstDay.toLocaleDateString('fr-FR') + " au " + todayStr;
-            } else if(filter === 'custom' && customDate) {
-                dateText = "Rapport spécifique du : " + new Date(customDate).toLocaleDateString('fr-FR');
-            }
+            if(filter === 'today') dateText = "Date du rapport : " + todayStr;
+            else if(filter === 'yesterday') { let d = new Date(); d.setDate(d.getDate()-1); dateText = "Journée du : " + d.toLocaleDateString('fr-FR'); }
+            else if(filter === 'week') { let d = new Date(); d.setDate(d.getDate()-7); dateText = "Du " + d.toLocaleDateString('fr-FR') + " au " + todayStr; }
+            else if(filter === 'month') { let d = new Date(); let firstDay = new Date(d.getFullYear(), d.getMonth(), 1); dateText = "Mois : Du " + firstDay.toLocaleDateString('fr-FR') + " au " + todayStr; }
+            else if(filter === 'custom' && customDate) { dateText = "Rapport du : " + new Date(customDate).toLocaleDateString('fr-FR'); }
 
             document.getElementById('pdfPeriodLabel').innerText = dateText;
             document.getElementById('pdfGenerationDate').innerText = new Date().toLocaleString('fr-FR');
-            
             document.getElementById('pdfInitialCash').innerText = formatCurrency(localStorage.getItem('stoek_premium_initial_cash') || 0);
             document.getElementById('pdfGlobalCashDesk').innerText = document.getElementById('globalCashDeskDisplay').innerText;
-
             document.getElementById('pdfRevenue').innerText = document.getElementById('revenueDisplay').innerText;
             document.getElementById('pdfExpenses').innerText = document.getElementById('expensesDisplay').innerText;
             document.getElementById('pdfNet').innerText = document.getElementById('netDisplay').innerText;
 
-            const pdfSalesBody = document.getElementById('pdfSalesTableBody');
-            pdfSalesBody.innerHTML = '';
-            const htmlSalesRows = document.querySelectorAll('#salesTableBody tr');
-            if(htmlSalesRows.length === 0) {
-                document.getElementById('pdf-sales-section').style.display = 'none';
-            } else {
-                document.getElementById('pdf-sales-section').style.display = 'block';
-                htmlSalesRows.forEach(tr => {
-                    let trClone = tr.cloneNode(true);
-                    if(trClone.lastElementChild) trClone.removeChild(trClone.lastElementChild);
-                    pdfSalesBody.appendChild(trClone);
-                });
-            }
+            // Remplissage PDF (Ventes, Dépenses, Banque, Transferts)
+            const copyTable = (sourceId, targetBodyId, sectionId, keepLastChild = false) => {
+                const targetBody = document.getElementById(targetBodyId);
+                targetBody.innerHTML = '';
+                const rows = document.querySelectorAll(`#${sourceId} tr`);
+                if(rows.length === 0) { document.getElementById(sectionId).style.display = 'none'; } 
+                else {
+                    document.getElementById(sectionId).style.display = 'block';
+                    rows.forEach(tr => {
+                        let trClone = tr.cloneNode(true);
+                        if(!keepLastChild && trClone.lastElementChild) trClone.removeChild(trClone.lastElementChild); // Remove Action column
+                        targetBody.appendChild(trClone);
+                    });
+                }
+            };
 
-            const pdfExpBody = document.getElementById('pdfExpensesTableBody');
-            pdfExpBody.innerHTML = '';
-            const htmlExpRows = document.querySelectorAll('#expensesTableBody tr');
-            if(htmlExpRows.length === 0) {
-                document.getElementById('pdf-expenses-section').style.display = 'none';
-            } else {
-                document.getElementById('pdf-expenses-section').style.display = 'block';
-                htmlExpRows.forEach(tr => {
-                    let trClone = tr.cloneNode(true);
-                    if(trClone.lastElementChild) trClone.removeChild(trClone.lastElementChild);
-                    pdfExpBody.appendChild(trClone);
-                });
-            }
-
-            const pdfBankBody = document.getElementById('pdfBankTableBody');
-            pdfBankBody.innerHTML = '';
-            const htmlBankRows = document.querySelectorAll('#bankTableBody tr');
-            if(htmlBankRows.length === 0) {
-                document.getElementById('pdf-bank-section').style.display = 'none';
-            } else {
-                document.getElementById('pdf-bank-section').style.display = 'block';
-                htmlBankRows.forEach(tr => {
-                    let trClone = tr.cloneNode(true);
-                    if(trClone.lastElementChild) trClone.removeChild(trClone.lastElementChild);
-                    pdfBankBody.appendChild(trClone);
-                });
-            }
+            copyTable('salesTableBody', 'pdfSalesTableBody', 'pdf-sales-section', false);
+            copyTable('expensesTableBody', 'pdfExpensesTableBody', 'pdf-expenses-section', false);
+            copyTable('bankTableBody', 'pdfBankTableBody', 'pdf-bank-section', false);
+            copyTable('transfersTableBody', 'pdfTransfersTableBody', 'pdf-transfers-section', true); // Pour le transfert, on garde tout
 
             const element = document.getElementById('pdf-report-container');
             element.classList.remove('d-none');
 
-            const configOptions = {
-                margin:       10,
-                filename:     'Rapport_' + currentAgency.replace(/[^a-z0-9]/gi, '_') + '_' + Date.now() + '.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            html2pdf().set(configOptions).from(element).save().then(() => {
-                element.classList.add('d-none');
-            });
-        };
-
-        document.getElementById('productForm').addEventListener('submit', function(e) {
-            e.preventDefault(); 
-            const newProduct = {
-                ref: document.getElementById('pRef').value,
-                name: document.getElementById('pName').value,
-                category: document.getElementById('pCategory').value,
-                quantity: parseInt(document.getElementById('pQuantity').value),
-                price: parseFloat(document.getElementById('pPrice').value),
-                status: document.getElementById('pStatus').value
-            };
-            myStock.unshift(newProduct);
-            displayStock(); 
-            this.reset(); 
-        });
-
-        window.deleteProduct = function(index) {
-            if(confirm("Confirmez-vous la suppression définitive de cet article ?")) {
-                myStock.splice(index, 1);
-                displayStock();
-            }
+            html2pdf().set({
+                margin: 10,
+                filename: 'Rapport_MyStoek_' + currentAgency.replace(/[^a-z0-9]/gi, '_') + '_' + Date.now() + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).from(element).save().then(() => { element.classList.add('d-none'); });
         };
 
         initConfigurationFields();
@@ -1059,12 +1148,10 @@
         displaySales();
     </script>
 
-    <!-- INTÉGRATION DE FIREBASE POUR PROTÉGER LA PAGE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // Ta configuration Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAYcjkrXKcjqFnf8E91JZWU1lMGS-yxSOU",
             authDomain: "kdo-cameroun.firebaseapp.com",
@@ -1077,31 +1164,19 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
 
-        // Vérification de la connexion
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // L'utilisateur est connecté ! On récupère son nom (ou son email s'il n'a pas mis de nom)
                 const userName = user.displayName || user.email.split('@')[0];
-                
-                // 1. Afficher dans la barre de navigation
                 document.getElementById('navUserName').innerText = userName;
-                
-                // 2. Préparer le nom pour le PDF (Haut de page bien visible)
                 document.getElementById('pdfTopUserName').innerText = userName;
-
-                // 3. Préparer le nom pour le PDF (Bas de page discret)
                 document.getElementById('pdfBottomUserName').innerText = userName;
             } else {
-                // L'utilisateur N'EST PAS connecté, on le renvoie vers la page de connexion
                 window.location.href = "index.html";
             }
         });
 
-        // Fonctionnalité du bouton de déconnexion
         document.getElementById('btnLogout').addEventListener('click', () => {
-            signOut(auth).then(() => {
-                window.location.href = "index.html"; // Renvoi vers la page d'accueil après déconnexion
-            });
+            signOut(auth).then(() => { window.location.href = "index.html"; });
         });
     </script>
 </body>
