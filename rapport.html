@@ -688,14 +688,12 @@
 
         window.currentUser = null;
 
-        // Sauvegarde avec traçabilité dans la console
         window.syncToCloud = async function(key, strValue) {
             if (!window.currentUser) return;
             try {
                 await setDoc(doc(db, "users", window.currentUser.uid, "rapportData", key), { value: strValue });
-                console.log(`✅ Synchro Rapport vers Cloud réussie : ${key}`);
             } catch (error) {
-                console.error(`❌ Erreur de sauvegarde Cloud pour ${key} :`, error);
+                console.error("Erreur de sauvegarde Cloud:", error);
             }
         };
 
@@ -709,27 +707,26 @@
                 ];
                 let cloudDataFound = false;
 
-                // L'utilisation de 'await' sécurise la connexion pour éviter les rejets
                 for (const k of keysToSync) {
                     const docRef = doc(db, "users", window.currentUser.uid, "rapportData", k);
                     const snap = await getDoc(docRef);
-                    const localData = localStorage.getItem(k);
-
                     if (snap.exists()) {
                         localStorage.setItem(k, snap.data().value);
                         cloudDataFound = true;
-                    } else if (localData) {
-                        await window.syncToCloud(k, localData);
+                    } else {
+                        const localData = localStorage.getItem(k);
+                        if (localData) {
+                            window.syncToCloud(k, localData);
+                        }
                     }
                 }
 
                 if (cloudDataFound && window.refreshDataFromLocal) {
                     window.refreshDataFromLocal();
                     window.initPage();
-                    console.log("🔄 L'affichage du Rapport a été rafraîchi depuis Firebase !");
                 }
             } catch (err) {
-                console.error("❌ Erreur critique de synchronisation Cloud -> Local:", err);
+                console.error("Erreur de synchronisation Cloud -> Local:", err);
             }
         }
 
