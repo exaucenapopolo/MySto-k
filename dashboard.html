@@ -1449,17 +1449,18 @@
 
         window.currentUser = null;
 
-        // Fonction d'envoi vers Firestore
+        // Fonction d'envoi vers Firestore sécurisée et attendue
         window.syncToCloud = async function(key, strValue) {
             if (!window.currentUser) return;
             try {
                 await setDoc(doc(db, "users", window.currentUser.uid, "dashboardData", key), { value: strValue });
+                console.log(`✅ Synchro Dashboard vers Cloud réussie : ${key}`);
             } catch (error) {
-                console.error("Erreur de sauvegarde Cloud:", error);
+                console.error(`❌ Erreur de sauvegarde Cloud pour ${key} :`, error);
             }
         };
 
-        // Fonction de téléchargement depuis Firestore vers localStorage
+        // Fonction de téléchargement (ou upload initial) sécurisée avec await pour chaque boucle
         async function syncCloudToLocal() {
             if (!window.currentUser) return;
             try {
@@ -1471,30 +1472,30 @@
                 ];
                 let cloudDataFound = false;
 
+                // L'utilisation de 'await' ici évite de bloquer la connexion Firebase avec trop de requêtes d'un coup
                 for (const k of keysToSync) {
                     const docRef = doc(db, "users", window.currentUser.uid, "dashboardData", k);
                     const snap = await getDoc(docRef);
+                    const localData = localStorage.getItem(k);
+
                     if (snap.exists()) {
-                        // On écrase le local avec ce qui vient du Cloud
+                        // S'il y a déjà une sauvegarde dans le cloud, on récupère
                         localStorage.setItem(k, snap.data().value);
                         cloudDataFound = true;
-                    } else {
-                        // S'il n'y a rien dans le cloud (nouveau pc), on envoie les données locales
-                        const localData = localStorage.getItem(k);
-                        if (localData) {
-                            window.syncToCloud(k, localData);
-                        }
+                    } else if (localData) {
+                        // Si rien n'est dans le cloud, on force la copie de la locale vers le Cloud MAINTENANT
+                        await window.syncToCloud(k, localData);
                     }
                 }
 
-                // Si on a ramené des données, on rafraîchit l'affichage !
                 if (cloudDataFound && window.refreshDataFromLocal) {
                     window.refreshDataFromLocal();
                     window.displayStock();
                     window.displaySales();
+                    console.log("🔄 L'affichage du Dashboard a été rafraîchi depuis Firebase !");
                 }
             } catch (err) {
-                console.error("Erreur de synchronisation Cloud -> Local:", err);
+                console.error("❌ Erreur critique de synchronisation Cloud -> Local:", err);
             }
         }
 
@@ -1506,7 +1507,6 @@
                 document.getElementById('pdfTopUserName').innerText = userName;
                 document.getElementById('pdfBottomUserName').innerText = userName;
 
-                // Lancement de la synchro en arrière plan
                 syncCloudToLocal();
             } else {
                 window.location.href = "index.html";
