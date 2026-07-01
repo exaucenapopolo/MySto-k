@@ -14,26 +14,37 @@
         .table-responsive { border-radius: 10px; overflow: hidden; }
         thead th { font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px; }
         
-        /* CSS spécifique pour empêcher la coupure des lignes dans le PDF */
         tr { page-break-inside: avoid; }
         
         #pdf-report-container { padding: 40px; background: #fff; line-height: 1.6; color: #333; }
         .letter-header { margin-bottom: 30px; border-bottom: 2px solid #0d6efd; padding-bottom: 15px; }
         .stats-box { background: #f8f9fa; border-left: 4px solid #0d6efd; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0; }
+        
+        /* Bouton flottant */
+        .fab-container { position: fixed; bottom: 20px; right: 20px; z-index: 1000; }
+        .fab-btn { box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: transform 0.2s; }
+        .fab-btn:hover { transform: scale(1.05); }
     </style>
 </head>
 <body>
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm mb-4">
         <div class="container-fluid px-4">
-            <a class="navbar-brand text-primary" href="dashboard.html">
-                <i class="bi bi-arrow-left-circle text-white me-2"></i>
+            <!-- Modification du lien de retour vers index.html -->
+            <a class="navbar-brand text-primary" href="index.html">
+                <i class="bi bi-box-arrow-left text-white me-2"></i>
                 MySto€k <span class="fs-6 text-white fw-normal ms-2">- Espace Commercial</span>
             </a>
+            <div class="ms-auto">
+                <a href="index.html" class="btn btn-outline-danger btn-sm" onclick="localStorage.removeItem('mystoek_target_page')">
+                    <i class="bi bi-power me-1"></i>Déconnexion
+                </a>
+            </div>
         </div>
     </nav>
 
     <div class="container-fluid px-4">
+        
         <!-- Configuration Commercial -->
         <div class="card p-3 mb-4 bg-white shadow-sm border-top border-primary border-4">
             <div class="row align-items-end">
@@ -116,12 +127,46 @@
             </div>
         </div>
 
+        <!-- NOUVEAU : Tableau de Bord des Performances (Comparaison) -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card p-4 shadow-sm bg-dark text-white border-bottom border-warning border-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0 fw-bold text-warning"><i class="bi bi-graph-up-arrow me-2"></i>Suivi de tes Performances Mensuelles</h5>
+                        <div class="badge bg-primary fs-6 py-2 px-3">Total Historique : <span id="globalTotalItems">0</span> Article(s) Vendu(s)</div>
+                    </div>
+                    
+                    <p class="small text-light opacity-75 mb-4">Comparaison de ton chiffre d'affaires du <strong class="text-white">1er au <span id="currentDayDisplay"></span></strong> pour le mois en cours par rapport au mois précédent.</p>
+                    
+                    <div class="row text-center">
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3 bg-secondary bg-opacity-25 rounded border border-secondary">
+                                <span class="d-block small text-uppercase text-light mb-1">Mois Passé (à la même date)</span>
+                                <h3 id="prevMonthRevenueDisplay" class="mb-0 text-white">0 XAF</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3 bg-secondary bg-opacity-25 rounded border border-warning">
+                                <span class="d-block small text-uppercase text-light mb-1">Ce Mois-ci (Actuellement)</span>
+                                <h3 id="currentMonthRevenueDisplay" class="mb-0 text-warning">0 XAF</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3 d-flex align-items-center justify-content-center">
+                            <div id="performanceMessage" class="fw-bold fs-5 w-100 p-3 rounded">
+                                <!-- Le message d'encouragement s'affichera ici -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Historique des ventes -->
         <div class="row">
             <div class="col-12">
                 <div class="card p-0 shadow-sm mb-5">
-                    <div class="card-header bg-dark text-white p-3">
-                        <h6 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2"></i>Mon Historique de Ventes</h6>
+                    <div class="card-header bg-secondary text-white p-3">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2"></i>Mon Historique de Ventes Détaillé</h6>
                     </div>
                     <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                         <table class="table table-hover align-middle mb-0">
@@ -143,6 +188,13 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- BOUTON FLOTTANT : C'EST QUOI MYSTOEK -->
+    <div class="fab-container">
+        <a href="about.html" class="btn btn-primary text-white rounded-pill px-4 py-3 fab-btn">
+            <i class="bi bi-info-circle-fill me-2 fs-5 align-middle"></i><span class="fw-bold align-middle">C'est quoi MySto€k ?</span>
+        </a>
     </div>
 
     <!-- Modal Enregistrer Vente -->
@@ -248,7 +300,6 @@
             <p><strong id="pdfSignName"></strong></p>
         </div>
 
-        <!-- Mention du système MySto€k en bas de page -->
         <div style="margin-top: 40px; padding-top: 15px; border-top: 1px solid #ddd; text-align: center; font-size: 0.8rem; color: #7f8c8d;">
             Rapport d'activité généré et sécurisé via <strong>MySto€k</strong> - Technologie de Gestion Intelligente
         </div>
@@ -350,7 +401,6 @@
             document.getElementById('sellPrice').value = item.price;
             document.getElementById('sellQuantity').value = 1;
             
-            // Permet de présélectionner la date du jour, mais modifiable
             document.getElementById('sellDate').value = new Date().toISOString().split('T')[0];
             
             document.getElementById('sellCitySelect').value = "";
@@ -366,8 +416,6 @@
             const name = document.getElementById('sellItemName').innerText;
             const qty = parseInt(document.getElementById('sellQuantity').value);
             const price = parseFloat(document.getElementById('sellPrice').value);
-            
-            // Récupère la date choisie par l'utilisateur
             const selectedDate = document.getElementById('sellDate').value;
             
             let city = document.getElementById('sellCitySelect').value;
@@ -388,7 +436,7 @@
             if(qty > 0 && price >= 0 && selectedDate) {
                 const sale = {
                     id: 'rsale_' + Date.now(),
-                    date: new Date(selectedDate).toISOString(), // On sauvegarde la date personnalisée
+                    date: new Date(selectedDate).toISOString(),
                     ref: ref,
                     name: name,
                     category: cat,
@@ -398,7 +446,6 @@
                     city: city
                 };
                 mySales.push(sale);
-                // On trie les ventes par date pour que l'historique soit logique même si on ajoute une date passée
                 mySales.sort((a, b) => new Date(a.date) - new Date(b.date));
                 
                 localStorage.setItem('stoek_premium_rapport_sales', JSON.stringify(mySales));
@@ -409,12 +456,71 @@
             }
         }
 
+        function updatePerformanceStats() {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth();
+            const currentDay = now.getDate();
+
+            // Mois précédent
+            let prevYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+            let prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+
+            let currentMonthRevenue = 0;
+            let prevMonthRevenue = 0;
+            let totalItemsAllTime = 0;
+
+            mySales.forEach(sale => {
+                const sDate = new Date(sale.date);
+                const sYear = sDate.getFullYear();
+                const sMonth = sDate.getMonth();
+                const sDay = sDate.getDate();
+
+                // Total global des articles
+                totalItemsAllTime += sale.quantity;
+
+                // Calcul du mois courant (du 1er jusqu'à aujourd'hui)
+                if (sYear === currentYear && sMonth === currentMonth && sDay <= currentDay) {
+                    currentMonthRevenue += sale.total;
+                }
+                
+                // Calcul du mois passé (du 1er jusqu'à la MÊME date que le mois en cours)
+                if (sYear === prevYear && sMonth === prevMonth && sDay <= currentDay) {
+                    prevMonthRevenue += sale.total;
+                }
+            });
+
+            // Affichage dans le tableau de bord
+            document.getElementById('globalTotalItems').innerText = totalItemsAllTime;
+            document.getElementById('currentDayDisplay').innerText = currentDay;
+            document.getElementById('currentMonthRevenueDisplay').innerText = formatCurrency(currentMonthRevenue);
+            document.getElementById('prevMonthRevenueDisplay').innerText = formatCurrency(prevMonthRevenue);
+
+            const msgBox = document.getElementById('performanceMessage');
+            
+            if (currentMonthRevenue > prevMonthRevenue) {
+                msgBox.className = "fw-bold fs-5 w-100 p-3 rounded bg-success text-white shadow";
+                msgBox.innerHTML = '<i class="bi bi-trophy me-2"></i>Excellent ! Tu as déjà dépassé tes performances du mois passé à la même période. Continue comme ça !';
+            } else if (currentMonthRevenue < prevMonthRevenue) {
+                msgBox.className = "fw-bold fs-5 w-100 p-3 rounded bg-danger text-white shadow";
+                let difference = prevMonthRevenue - currentMonthRevenue;
+                msgBox.innerHTML = `<i class="bi bi-exclamation-triangle me-2"></i>Attention ! Il te manque ${formatCurrency(difference)} pour rattraper ton rythme du mois précédent. Force à toi !`;
+            } else {
+                if (currentMonthRevenue === 0 && prevMonthRevenue === 0) {
+                    msgBox.className = "fw-bold fs-5 w-100 p-3 rounded bg-secondary text-white shadow";
+                    msgBox.innerHTML = '<i class="bi bi-info-circle me-2"></i>Aucune donnée pour comparer cette période. Commence à enregistrer tes ventes !';
+                } else {
+                    msgBox.className = "fw-bold fs-5 w-100 p-3 rounded bg-info text-dark shadow";
+                    msgBox.innerHTML = '<i class="bi bi-emoji-smile me-2"></i>Tu es exactement au même niveau que le mois passé. Un petit effort pour faire mieux !';
+                }
+            }
+        }
+
         function displaySales() {
             const tbody = document.getElementById('salesTableBody');
             tbody.innerHTML = '';
             let globalRev = 0;
 
-            // On affiche du plus récent au plus ancien
             [...mySales].reverse().forEach(sale => {
                 globalRev += sale.total;
                 const sDate = new Date(sale.date);
@@ -434,6 +540,9 @@
                 `;
             });
             document.getElementById('globalRevenueDisplay').innerText = formatCurrency(globalRev);
+            
+            // On met à jour les stats comparatives à chaque affichage
+            updatePerformanceStats();
         }
 
         window.deleteSale = function(id) {
@@ -500,14 +609,13 @@
                 }
             });
 
-            // Retrait de la longue phrase pour le premier rapport
             let compText = "";
             if (prevMonthRevenue > 0) {
                 if (totalRevenue > prevMonthRevenue) {
                     let evolution = totalRevenue - prevMonthRevenue;
                     compText = `Je suis heureux(se) de vous informer que mon chiffre d'affaires est en augmentation par rapport au mois précédent. J'ai généré une croissance de ${formatCurrency(evolution)}, prouvant l'efficacité de la stratégie mise en place.`;
                 } else {
-                    compText = `Bien que le chiffre d'affaires de ce mois soit légèrement en deçà de celui du mois précédent (qui était de ${formatCurrency(prevMonthRevenue)}), de nouvelles prospections ont été initiées et porteront leurs fruits très prochainement.`;
+                    compText = `Bien que le chiffre d'affaires de ce mois soit en deçà de celui du mois précédent (qui était de ${formatCurrency(prevMonthRevenue)}), de nouvelles prospections ont été initiées et porteront leurs fruits très prochainement.`;
                 }
             }
 
@@ -548,7 +656,6 @@
             const element = document.getElementById('pdf-report-container');
             element.classList.remove('d-none');
             
-            // Configuration pagebreak ajoutée pour empêcher la coupure des lignes
             html2pdf().set({
                 margin: 15,
                 filename: `Rapport_Commercial_${commName.replace(/[^a-z0-9]/gi, '_')}_${monthLabel.replace(' ','_')}.pdf`,
