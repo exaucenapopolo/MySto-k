@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Rapport - MySto€k</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding-bottom: 80px; min-height: 100vh;}
+        .navbar-brand { font-weight: 800; font-size: 1.5rem; letter-spacing: 1px; display: flex; align-items: center; gap: 10px;}
+        .card { border: none; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .table-responsive { border-radius: 10px; overflow: hidden; }
+        thead th { font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px; }
+        .fab-btn { box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: transform 0.2s; }
+        .fab-btn:hover { transform: scale(1.05); }
+        #pdf-report-container { padding: 40px; background: #fff; line-height: 1.6; color: #333; }
+        .letter-header { margin-bottom: 30px; border-bottom: 2px solid #0d6efd; padding-bottom: 15px; }
+        .stats-box { background: #f8f9fa; border-left: 4px solid #0d6efd; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm mb-4">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand text-primary" href="dashboard.html">
+                <i class="bi bi-arrow-left-circle text-white me-2"></i>
+                MySto€k <span class="fs-6 text-white fw-normal ms-2">- Espace Commercial</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4">
+        <div class="card p-3 mb-4 bg-white shadow-sm border-top border-primary border-4">
+            <div class="row align-items-end">
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <label class="form-label text-muted small fw-bold"><i class="bi bi-person-badge me-1"></i>Ton Nom (Commercial)</label>
+                    <input type="text" id="commercialName" class="form-control form-control-sm border-primary fw-bold" placeholder="Ex: KDO NUMERICA" onchange="saveConfig()">
+                </div>
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <label class="form-label text-muted small fw-bold"><i class="bi bi-building me-1"></i>Nom du Supérieur / Structure</label>
+                    <input type="text" id="bossName" class="form-control form-control-sm" placeholder="Ex: Monsieur le Directeur / KDO INFORMATIQUE" onchange="saveConfig()">
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <div class="bg-light p-2 rounded d-inline-block border">
+                        <span class="text-muted small d-block">Chiffre d'Affaires Global (Personnel)</span>
+                        <h4 id="globalRevenueDisplay" class="text-success mb-0 fw-bold">0 XAF</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-xl-8 mb-4">
+                <div class="card p-0 h-100 shadow-sm">
+                    <div class="card-header bg-light p-3 d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-cart-plus text-primary me-2"></i>Catalogue d'Articles (Nouvelle Vente)</h6>
+                    </div>
+                    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light text-muted sticky-top">
+                                <tr>
+                                    <th>Réf</th>
+                                    <th>Désignation</th>
+                                    <th>Catégorie</th>
+                                    <th class="text-end">Prix Standard</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="catalogueTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-4 mb-4">
+                <div class="card p-4 mb-4 shadow-sm border-top border-success border-4">
+                    <h6 class="mb-3 text-success fw-bold"><i class="bi bi-plus-circle me-2"></i>Article non listé ? Ajoute-le</h6>
+                    <form id="newProductForm">
+                        <div class="mb-2">
+                            <input type="text" id="npName" class="form-control form-control-sm" placeholder="Désignation de l'article" required>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <select id="npCategory" class="form-select form-select-sm" required>
+                                    <option value="Laptop">Laptop</option>
+                                    <option value="Consommables">Consommables</option>
+                                    <option value="Téléphone">Téléphone</option>
+                                    <option value="Autre">Autre</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <input type="number" id="npPrice" class="form-control form-control-sm" placeholder="Prix standard (XAF)" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-outline-success btn-sm w-100">Ajouter au catalogue personnel</button>
+                    </form>
+                </div>
+
+                <div class="card p-4 shadow-sm border-top border-danger border-4 bg-light">
+                    <h5 class="mb-3 text-danger fw-bold"><i class="bi bi-file-earmark-pdf me-2"></i>Générer le Rapport Mensuel</h5>
+                    <p class="small text-muted mb-3">Sélectionne un mois pour générer une lettre professionnelle résumant tes ventes pour la direction.</p>
+                    <div class="mb-3">
+                        <input type="month" id="reportMonthSelect" class="form-control form-control-lg fw-bold border-danger">
+                    </div>
+                    <button class="btn btn-danger w-100 fw-bold shadow-sm" onclick="generateAndDownloadPDF()">
+                        <i class="bi bi-download me-2"></i>Télécharger le PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card p-0 shadow-sm mb-5">
+                    <div class="card-header bg-dark text-white p-3">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2"></i>Mon Historique de Ventes</h6>
+                    </div>
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light text-muted sticky-top">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Article</th>
+                                    <th>Catégorie</th>
+                                    <th>Ville / Zone</th>
+                                    <th class="text-center">Qté</th>
+                                    <th class="text-end">Prix Vendu (XAF)</th>
+                                    <th class="text-end">Total (XAF)</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="salesTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="sellModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-cart-check me-2"></i>Déclarer une Vente</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="sellItemRef">
+                    <input type="hidden" id="sellItemCat">
+                    <h5 id="sellItemName" class="text-primary mb-3 fw-bold"></h5>
+                    
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-bold">Quantité vendue</label>
+                            <input type="number" id="sellQuantity" class="form-control" min="1" value="1" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold text-success">Prix de vente final (XAF)</label>
+                            <input type="number" id="sellPrice" class="form-control border-success" placeholder="Modifiable" required>
+                            <small class="text-muted">Tu peux ajuster le prix ici.</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 p-3 bg-light border rounded">
+                        <label class="form-label fw-bold">Ville / Zone de la vente</label>
+                        <select id="sellCitySelect" class="form-select mb-2" onchange="toggleCityInput()"></select>
+                        <input type="text" id="sellCityInput" class="form-control d-none" placeholder="Saisir la nouvelle ville...">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary fw-bold" onclick="confirmSale()">Enregistrer ma vente</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="pdf-report-container" class="d-none">
+        <div class="letter-header d-flex justify-content-between align-items-start">
+            <div>
+                <img src="https://raw.githubusercontent.com/exaucenapopolo/MySto-k/refs/heads/main/logo%20mystok.png" alt="Logo" crossorigin="anonymous" style="height: 50px; margin-bottom: 10px;">
+                <h3 style="color: #2c3e50; font-weight: 800; margin: 0;">MySto€k</h3>
+                <p style="font-size: 0.8rem; color: #7f8c8d;">Technologie de Gestion Intelligente</p>
+            </div>
+            <div style="text-align: right;">
+                <h5 id="pdfDate" style="color: #333; margin: 0;">Date</h5>
+                <p style="font-size: 0.9rem; margin-top: 5px;">Rapport édité par : <strong id="pdfCommercialName"></strong></p>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+            <p style="font-size: 1.1rem;">À l'attention de : <strong id="pdfBossName"></strong></p>
+            <h4 style="text-align: center; margin: 30px 0; text-transform: uppercase; color: #0d6efd; font-weight: bold;">
+                Rapport d'activité commerciale - <span id="pdfMonthLabel"></span>
+            </h4>
+        </div>
+
+        <div style="margin-bottom: 20px; font-size: 1rem; text-align: justify;">
+            <p>Bonjour,</p>
+            <p>J'ai l'honneur de vous soumettre par la présente le rapport d'activité détaillant l'ensemble de mes ventes réalisées au cours du mois de <strong id="pdfMonthText"></strong>.</p>
+            <p id="pdfComparisonText" style="font-style: italic; color: #2c3e50;"></p>
+        </div>
+
+        <div class="stats-box">
+            <h5 style="color: #0d6efd; border-bottom: 1px solid #dee2e6; padding-bottom: 5px;">Résumé des performances</h5>
+            <ul style="list-style-type: none; padding-left: 0; margin-top: 15px;">
+                <li style="margin-bottom: 8px;"><strong>Chiffre d'Affaires Total Généré :</strong> <span id="pdfTotalRevenue" style="color: #198754; font-size: 1.2rem; font-weight: bold;"></span></li>
+                <li style="margin-bottom: 8px;"><strong>Nombre Total d'Articles Vendus :</strong> <span id="pdfTotalItems"></span> article(s)</li>
+                <li style="margin-bottom: 8px;"><strong>Zone géographique la plus performante :</strong> <span id="pdfBestCity" style="color: #dc3545; font-weight: bold;"></span></li>
+            </ul>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+            <h5 style="color: #333;">Détail par Catégorie de produits :</h5>
+            <ul id="pdfCategoryBreakdown" style="line-height: 1.8;"></ul>
+        </div>
+
+        <p>Veuillez trouver ci-dessous le tableau récapitulatif des transactions enregistrées pour cette période :</p>
+
+        <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.85rem;">
+            <thead>
+                <tr style="background-color: #0d6efd; color: white;">
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Date</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Article</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Zone/Ville</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">Qté</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: right;">Total (XAF)</th>
+                </tr>
+            </thead>
+            <tbody id="pdfDetailsTableBody"></tbody>
+        </table>
+
+        <div style="margin-top: 50px; text-align: right;">
+            <p>Cordialement,</p>
+            <p><strong id="pdfSignName"></strong></p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Formateur de monnaie
+        const formatCurrency = (amount) => new Intl.NumberFormat('fr-FR').format(amount) + " XAF";
+
+        // Bases de données locales isolées pour le rapport
+        let myCatalogue = JSON.parse(localStorage.getItem('stoek_premium_rapport_inventory')) || null;
+        let mySales = JSON.parse(localStorage.getItem('stoek_premium_rapport_sales')) || [];
+        let myCities = JSON.parse(localStorage.getItem('stoek_premium_rapport_cities')) || ["Bertoua", "Yaoundé", "Douala"];
+
+        // Initialisation du catalogue s'il est vide (copie depuis le dashboard s'il existe, sinon vide)
+        if (!myCatalogue) {
+            const globalStock = JSON.parse(localStorage.getItem('stoek_premium_inventory'));
+            if(globalStock) {
+                myCatalogue = globalStock.map(item => ({ ref: item.ref, name: item.name, category: item.category, price: item.price }));
+            } else {
+                myCatalogue = []; // Vide si le dashboard n'a jamais été ouvert
+            }
+            localStorage.setItem('stoek_premium_rapport_inventory', JSON.stringify(myCatalogue));
+        }
+
+        const sellModal = new bootstrap.Modal(document.getElementById('sellModal'));
+
+        // Initialisation de la page
+        function initPage() {
+            document.getElementById('commercialName').value = localStorage.getItem('stoek_premium_rapport_comm_name') || "";
+            document.getElementById('bossName').value = localStorage.getItem('stoek_premium_rapport_boss_name') || "";
+            
+            // Met le mois actuel par défaut dans l'input month
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            let mm = today.getMonth() + 1;
+            if(mm < 10) mm = '0' + mm;
+            document.getElementById('reportMonthSelect').value = `${yyyy}-${mm}`;
+
+            updateCitySelect();
+            displayCatalogue();
+            displaySales();
+        }
+
+        function saveConfig() {
+            localStorage.setItem('stoek_premium_rapport_comm_name', document.getElementById('commercialName').value);
+            localStorage.setItem('stoek_premium_rapport_boss_name', document.getElementById('bossName').value);
+        }
+
+        function updateCitySelect() {
+            const select = document.getElementById('sellCitySelect');
+            let html = '<option value="">-- Choisir une ville existante --</option>';
+            myCities.forEach(city => { html += `<option value="${city}">${city}</option>`; });
+            html += '<option value="NOUVELLE">++ Ajouter une nouvelle ville ++</option>';
+            select.innerHTML = html;
+        }
+
+        window.toggleCityInput = function() {
+            const val = document.getElementById('sellCitySelect').value;
+            const input = document.getElementById('sellCityInput');
+            if (val === 'NOUVELLE') { input.classList.remove('d-none'); } 
+            else { input.classList.add('d-none'); }
+        }
+
+        function displayCatalogue() {
+            const tbody = document.getElementById('catalogueTableBody');
+            tbody.innerHTML = '';
+            myCatalogue.forEach((item, idx) => {
+                let badgeClass = item.category === 'Laptop' ? 'bg-primary' : (item.category === 'Consommables' ? 'bg-success' : 'bg-secondary');
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="text-muted small">${item.ref || 'N/A'}</td>
+                        <td class="fw-bold">${item.name}</td>
+                        <td><span class="badge ${badgeClass}">${item.category}</span></td>
+                        <td class="text-end text-muted">${formatCurrency(item.price)}</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-primary" onclick="openSellModal(${idx})">Vendre</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Ajouter un produit personnalisé
+        document.getElementById('newProductForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newRef = "C" + Date.now().toString().slice(-4); // Génère une ref unique
+            myCatalogue.unshift({
+                ref: newRef,
+                name: document.getElementById('npName').value,
+                category: document.getElementById('npCategory').value,
+                price: parseFloat(document.getElementById('npPrice').value)
+            });
+            localStorage.setItem('stoek_premium_rapport_inventory', JSON.stringify(myCatalogue));
+            displayCatalogue();
+            this.reset();
+        });
+
+        window.openSellModal = function(idx) {
+            const item = myCatalogue[idx];
+            document.getElementById('sellItemRef').value = item.ref;
+            document.getElementById('sellItemCat').value = item.category;
+            document.getElementById('sellItemName').innerText = item.name;
+            document.getElementById('sellPrice').value = item.price;
+            document.getElementById('sellQuantity').value = 1;
+            
+            document.getElementById('sellCitySelect').value = "";
+            document.getElementById('sellCityInput').value = "";
+            document.getElementById('sellCityInput').classList.add('d-none');
+            
+            sellModal.show();
+        }
+
+        window.confirmSale = function() {
+            const ref = document.getElementById('sellItemRef').value;
+            const cat = document.getElementById('sellItemCat').value;
+            const name = document.getElementById('sellItemName').innerText;
+            const qty = parseInt(document.getElementById('sellQuantity').value);
+            const price = parseFloat(document.getElementById('sellPrice').value);
+            
+            let city = document.getElementById('sellCitySelect').value;
+            
+            if(city === 'NOUVELLE') {
+                city = document.getElementById('sellCityInput').value.trim();
+                if(city === "") { alert("Veuillez saisir le nom de la ville !"); return; }
+                const upperCity = city.toUpperCase();
+                if(!myCities.find(c => c.toUpperCase() === upperCity)) {
+                    myCities.push(city);
+                    localStorage.setItem('stoek_premium_rapport_cities', JSON.stringify(myCities));
+                    updateCitySelect();
+                }
+            } else if (city === "") {
+                alert("Veuillez choisir ou créer une ville !"); return;
+            }
+
+            if(qty > 0 && price >= 0) {
+                const sale = {
+                    id: 'rsale_' + Date.now(),
+                    date: new Date().toISOString(),
+                    ref: ref,
+                    name: name,
+                    category: cat,
+                    quantity: qty,
+                    price: price,
+                    total: qty * price,
+                    city: city
+                };
+                mySales.push(sale);
+                localStorage.setItem('stoek_premium_rapport_sales', JSON.stringify(mySales));
+                sellModal.hide();
+                displaySales();
+            } else {
+                alert("Quantité ou prix invalide !");
+            }
+        }
+
+        function displaySales() {
+            const tbody = document.getElementById('salesTableBody');
+            tbody.innerHTML = '';
+            let globalRev = 0;
+
+            [...mySales].reverse().forEach(sale => {
+                globalRev += sale.total;
+                const sDate = new Date(sale.date);
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="text-muted small">${sDate.toLocaleDateString('fr-FR')}</td>
+                        <td class="fw-bold">${sale.name}</td>
+                        <td class="small text-muted">${sale.category}</td>
+                        <td><span class="badge bg-info text-dark">${sale.city}</span></td>
+                        <td class="text-center fw-bold">${sale.quantity}</td>
+                        <td class="text-end">${formatCurrency(sale.price)}</td>
+                        <td class="text-end fw-bold text-success">${formatCurrency(sale.total)}</td>
+                        <td class="text-center">
+                            <button class="btn btn-outline-danger btn-sm py-0 px-1" onclick="deleteSale('${sale.id}')"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+            document.getElementById('globalRevenueDisplay').innerText = formatCurrency(globalRev);
+        }
+
+        window.deleteSale = function(id) {
+            if(confirm("Supprimer cette vente de ton historique ?")) {
+                mySales = mySales.filter(s => s.id !== id);
+                localStorage.setItem('stoek_premium_rapport_sales', JSON.stringify(mySales));
+                displaySales();
+            }
+        }
+
+        // ALGORITHME DE GÉNÉRATION DU RAPPORT PDF
+        window.generateAndDownloadPDF = function() {
+            const selectedMonthStr = document.getElementById('reportMonthSelect').value;
+            if(!selectedMonthStr) { alert("Veuillez sélectionner un mois !"); return; }
+            
+            const commName = document.getElementById('commercialName').value || "Commercial non défini";
+            const bossName = document.getElementById('bossName').value || "À la Direction";
+
+            const [year, month] = selectedMonthStr.split('-');
+            const targetYear = parseInt(year);
+            const targetMonth = parseInt(month) - 1; // JS months are 0-indexed
+
+            const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+            const monthLabel = `${monthNames[targetMonth]} ${targetYear}`;
+
+            // Calculs pour le mois cible
+            let currentMonthSales = [];
+            let totalRevenue = 0;
+            let totalItems = 0;
+            let categoriesStats = { "Laptop": 0, "Consommables": 0, "Téléphone": 0, "Autre": 0 };
+            let citiesStats = {};
+
+            mySales.forEach(sale => {
+                const sDate = new Date(sale.date);
+                if(sDate.getFullYear() === targetYear && sDate.getMonth() === targetMonth) {
+                    currentMonthSales.push(sale);
+                    totalRevenue += sale.total;
+                    totalItems += sale.quantity;
+                    
+                    if(categoriesStats[sale.category] !== undefined) categoriesStats[sale.category] += sale.quantity;
+                    else categoriesStats["Autre"] += sale.quantity;
+
+                    if(citiesStats[sale.city]) citiesStats[sale.city] += sale.quantity;
+                    else citiesStats[sale.city] = sale.quantity;
+                }
+            });
+
+            if(currentMonthSales.length === 0) {
+                alert("Aucune vente enregistrée pour ce mois !"); return;
+            }
+
+            // Calcul de la meilleure ville
+            let bestCity = "Aucune";
+            let maxCitySales = 0;
+            for (const [city, qty] of Object.entries(citiesStats)) {
+                if (qty > maxCitySales) { maxCitySales = qty; bestCity = city; }
+            }
+
+            // Calcul du mois précédent pour comparaison
+            let prevYear = targetMonth === 0 ? targetYear - 1 : targetYear;
+            let prevMonth = targetMonth === 0 ? 11 : targetMonth - 1;
+            let prevMonthRevenue = 0;
+
+            mySales.forEach(sale => {
+                const sDate = new Date(sale.date);
+                if(sDate.getFullYear() === prevYear && sDate.getMonth() === prevMonth) {
+                    prevMonthRevenue += sale.total;
+                }
+            });
+
+            // Génération du texte de comparaison
+            let compText = "";
+            if (prevMonthRevenue === 0) {
+                compText = "Ceci constitue mon premier rapport d'activité enregistré dans le système sur cette période, établissant ainsi une base solide pour mes objectifs futurs.";
+            } else if (totalRevenue > prevMonthRevenue) {
+                let evolution = totalRevenue - prevMonthRevenue;
+                compText = `Je suis heureux(se) de vous informer que mon chiffre d'affaires est en augmentation par rapport au mois précédent. J'ai généré une croissance de ${formatCurrency(evolution)}, prouvant l'efficacité de la stratégie mise en place.`;
+            } else {
+                compText = `Bien que le chiffre d'affaires de ce mois soit légèrement en deçà de celui du mois précédent (qui était de ${formatCurrency(prevMonthRevenue)}), de nouvelles prospections ont été initiées et porteront leurs fruits très prochainement.`;
+            }
+
+            // Remplissage du PDF HTML
+            document.getElementById('pdfDate').innerText = new Date().toLocaleDateString('fr-FR');
+            document.getElementById('pdfCommercialName').innerText = commName;
+            document.getElementById('pdfBossName').innerText = bossName;
+            document.getElementById('pdfMonthLabel').innerText = monthLabel;
+            document.getElementById('pdfMonthText').innerText = monthLabel;
+            document.getElementById('pdfComparisonText').innerText = compText;
+            document.getElementById('pdfTotalRevenue').innerText = formatCurrency(totalRevenue);
+            document.getElementById('pdfTotalItems').innerText = totalItems;
+            document.getElementById('pdfBestCity').innerText = `${bestCity} (${maxCitySales} article(s))`;
+            document.getElementById('pdfSignName').innerText = commName;
+
+            // Remplissage des catégories
+            const catUl = document.getElementById('pdfCategoryBreakdown');
+            catUl.innerHTML = '';
+            for (const [cat, qty] of Object.entries(categoriesStats)) {
+                if(qty > 0) {
+                    catUl.innerHTML += `<li>- <strong>${cat}</strong> : ${qty} unité(s) écoulée(s)</li>`;
+                }
+            }
+
+            // Remplissage du tableau détaillé
+            const pdfTableBody = document.getElementById('pdfDetailsTableBody');
+            pdfTableBody.innerHTML = '';
+            currentMonthSales.forEach(sale => {
+                const sd = new Date(sale.date);
+                pdfTableBody.innerHTML += `
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${sd.toLocaleDateString('fr-FR')}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px; font-weight: bold;">${sale.name}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${sale.city}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${sale.quantity}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${formatCurrency(sale.total)}</td>
+                    </tr>
+                `;
+            });
+
+            // Lancement de html2pdf
+            const element = document.getElementById('pdf-report-container');
+            element.classList.remove('d-none');
+            
+            html2pdf().set({
+                margin: 15,
+                filename: `Rapport_Commercial_${commName.replace(/[^a-z0-9]/gi, '_')}_${monthLabel.replace(' ','_')}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).from(element).save().then(() => {
+                element.classList.add('d-none');
+            });
+        }
+
+        initPage();
+    </script>
+</body>
+</html>
