@@ -384,12 +384,7 @@
                     <div class="mb-3 border border-success p-2 rounded bg-light">
                         <label class="form-label fw-bold text-success">Nom du vendeur (Commercial) *</label>
                         <select id="saleCommercialSelect" class="form-select mb-2 border-success" onchange="toggleCustomCommercial('saleCommercialSelect', 'saleCommercialCustom')" required>
-                            <option value="">-- Sélectionner un vendeur --</option>
-                            <option value="KDO NUMERICA">KDO NUMERICA</option>
-                            <option value="KDO ACCESS">KDO ACCESS</option>
-                            <option value="KDO HORIZON">KDO HORIZON</option>
-                            <option value="AUTRE">Autre (Saisir manuellement)</option>
-                        </select>
+                            </select>
                         <input type="text" id="saleCommercialCustom" class="form-control d-none border-success" placeholder="Saisir le nom du vendeur...">
                     </div>
 
@@ -424,11 +419,7 @@
                     <div class="mb-3">
                         <label class="form-label fw-bold">Modifier le vendeur</label>
                         <select id="editSaleCommercialSelect" class="form-select mb-2" onchange="toggleCustomCommercial('editSaleCommercialSelect', 'editSaleCommercialCustom')">
-                            <option value="KDO NUMERICA">KDO NUMERICA</option>
-                            <option value="KDO ACCESS">KDO ACCESS</option>
-                            <option value="KDO HORIZON">KDO HORIZON</option>
-                            <option value="AUTRE">Autre (Saisir manuellement)</option>
-                        </select>
+                            </select>
                         <input type="text" id="editSaleCommercialCustom" class="form-control d-none" placeholder="Saisir le nom du vendeur...">
                     </div>
 
@@ -445,6 +436,33 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
                     <button type="button" class="btn btn-warning text-dark" onclick="saveEditedSale()">Sauvegarder les modifications</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="repairModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title"><i class="bi bi-tools me-2"></i>Réparer un Article Défectueux</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="repairItemIndex">
+                    <h6 id="repairItemName" class="text-warning mb-3 fw-bold"></h6>
+                    <div class="mb-3">
+                        <label class="form-label">Stock défectueux disponible : <strong id="repairItemStock" class="text-danger"></strong></label>
+                    </div>
+                    <div class="mb-3 border border-warning p-3 bg-light rounded">
+                        <label class="form-label fw-bold">Combien d'articles avez-vous réparé avec succès ?</label>
+                        <input type="number" id="repairQuantity" class="form-control" min="1" value="1">
+                        <small class="text-muted mt-2 d-block">Ces articles seront retirés des défectueux et rajoutés au stock "Normal".</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-warning text-dark fw-bold" onclick="confirmRepair()">Valider la Réparation</button>
                 </div>
             </div>
         </div>
@@ -547,22 +565,24 @@
         </div>
     </div>
 
-    <div id="pdf-report-container" class="d-none" style="font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; color: #333;">
+    <div id="pdf-report-container" class="d-none" style="font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; color: #333; padding-bottom: 30px;">
         
         <div style="text-align: center; border-bottom: 4px solid #f39c12; padding-bottom: 15px; margin-bottom: 20px; background-color: #fdfaf6; padding-top: 20px; border-radius: 8px 8px 0 0;">
             <img src="https://raw.githubusercontent.com/exaucenapopolo/MySto-k/refs/heads/main/logo%20mystok.png" alt="Logo" crossorigin="anonymous" style="height: 50px; margin-bottom: 10px;">
             <h2 id="pdfStructureName" style="color: #2c3e50; margin: 0; font-weight: 800;">MySto€k</h2>
             
-            <h5 style="color: #2980b9; margin-top: 5px; font-weight: bold;">Géré et édité par : <span id="pdfTopUserName"></span></h5>
-            <h4 style="margin-top: 10px; color: #2c3e50;">RAPPORT DE COMPTABILITÉ - AGENCE : <span id="pdfAgencyLabel" style="color: #2980b9;"></span></h4>
+            <h5 style="color: #2980b9; margin-top: 5px; font-weight: bold;">Généré par l'employé(e) : <span id="pdfTopUserName"></span></h5>
+            <h6 style="color: #7f8c8d; margin-top: 5px; font-style: italic;">Technologie : MySto€k</h6>
+            
+            <h4 style="margin-top: 15px; color: #2c3e50;">RAPPORT DE COMPTABILITÉ - AGENCE : <span id="pdfAgencyLabel" style="color: #2980b9;"></span></h4>
             <div style="display: inline-block; background-color: #f39c12; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; margin-top: 10px;">
                 <span id="pdfPeriodLabel"></span>
             </div>
-            <p style="font-size: 0.85rem; color: #7f8c8d; margin-top: 10px; margin-bottom: 0;">Document généré le : <span id="pdfGenerationDate"></span></p>
+            <p style="font-size: 0.85rem; color: #7f8c8d; margin-top: 10px; margin-bottom: 0;">Document édité le : <span id="pdfGenerationDate"></span></p>
         </div>
 
         <div style="margin-bottom: 30px;">
-            <h3 style="color: #2c3e50; border-left: 5px solid #2980b9; padding-left: 10px;">1. SITUATION GLOBALE DE LA CAISSE PHYSIQUE</h3>
+            <h3 style="color: #2c3e50; border-left: 5px solid #2980b9; padding-left: 10px; font-size: 1.1rem;">1. SITUATION GLOBALE DE LA CAISSE PHYSIQUE</h3>
             <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                 <tr>
                     <td style="border: 1px solid #ddd; padding: 10px; background-color: #f9f9f9; color: #555;">Fond de Caisse Initial de Sécurisation</td>
@@ -576,7 +596,7 @@
         </div>
 
         <div style="margin-bottom: 30px;">
-            <h3 style="color: #2c3e50; border-left: 5px solid #8e44ad; padding-left: 10px;">2. RÉSUMÉ FINANCIER DE LA PÉRIODE SÉLECTIONNÉE</h3>
+            <h3 id="pdfDynamicPeriodTitle" style="color: #2c3e50; border-left: 5px solid #8e44ad; padding-left: 10px; font-size: 1.1rem; text-transform: uppercase;">2. RÉSUMÉ FINANCIER DE LA PÉRIODE</h3>
             <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                 <tr>
                     <td style="border: 1px solid #ddd; padding: 10px;">Chiffre d'Affaires Brut (Ventes)</td>
@@ -594,12 +614,12 @@
         </div>
 
         <div id="pdf-sales-section" style="margin-bottom: 30px;">
-            <h3 style="color: #2c3e50; border-left: 5px solid #27ae60; padding-left: 10px;">3. JOURNAL DES VENTES</h3>
+            <h3 style="color: #2c3e50; border-left: 5px solid #27ae60; padding-left: 10px; font-size: 1.1rem;">3. JOURNAL DES VENTES</h3>
             <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem;">
                 <thead>
                     <tr style="background-color: #27ae60; color: white;">
                         <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Date</th>
-                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Article</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Article (Désignation)</th>
                         <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Vendeur</th>
                         <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Qté</th>
                         <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Total (XAF)</th>
@@ -610,21 +630,35 @@
         </div>
 
         <div id="pdf-expenses-section" style="margin-bottom: 30px;">
-            <h3 style="color: #2c3e50; border-left: 5px solid #c0392b; padding-left: 10px;">4. JOURNAL DES DÉPENSES</h3>
+            <h3 style="color: #2c3e50; border-left: 5px solid #c0392b; padding-left: 10px; font-size: 1.1rem;">4. JOURNAL DES DÉPENSES</h3>
             <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem;">
+                <thead>
+                    <tr style="background-color: #c0392b; color: white;">
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Date</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Motif / Description de la dépense</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Montant (XAF)</th>
+                    </tr>
+                </thead>
                 <tbody id="pdfExpensesTableBody"></tbody>
             </table>
         </div>
 
         <div id="pdf-bank-section" style="margin-bottom: 30px;">
-            <h3 style="color: #2c3e50; border-left: 5px solid #2980b9; padding-left: 10px;">5. VERSEMENTS BANCAIRES</h3>
+            <h3 style="color: #2c3e50; border-left: 5px solid #2980b9; padding-left: 10px; font-size: 1.1rem;">5. VERSEMENTS BANCAIRES</h3>
             <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem;">
+                <thead>
+                    <tr style="background-color: #2980b9; color: white;">
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Date</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Banque / Référence</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Montant (XAF)</th>
+                    </tr>
+                </thead>
                 <tbody id="pdfBankTableBody"></tbody>
             </table>
         </div>
 
         <div id="pdf-transfers-section" style="margin-bottom: 30px;">
-            <h3 style="color: #2c3e50; border-left: 5px solid #17a2b8; padding-left: 10px;">6. MOUVEMENTS : ARTICLES TRANSFÉRÉS</h3>
+            <h3 style="color: #2c3e50; border-left: 5px solid #17a2b8; padding-left: 10px; font-size: 1.1rem;">6. MOUVEMENTS : ARTICLES TRANSFÉRÉS</h3>
             <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem;">
                 <thead>
                     <tr style="background-color: #17a2b8; color: white;">
@@ -639,8 +673,9 @@
         </div>
 
         <div style="margin-top: 40px; text-align: center; font-size: 0.8rem; color: #95a5a6; border-top: 1px solid #ecf0f1; padding-top: 15px;">
-            <p style="margin: 0;">Généré par <strong id="pdfFooterStructureName">MySto€k</strong> - Gestion de stock intelligente et sécurisée</p>
-            <p style="margin-top: 10px; font-size: 0.7rem; color: #bdc3c7;">Opérateur système : <span id="pdfBottomUserName"></span></p>
+            <p style="margin: 0; font-size: 0.9rem;">Édition professionnelle générée via la technologie <strong id="pdfFooterBrand">MySto€k</strong></p>
+            <p style="margin-top: 5px;">Gestion de stock intelligente et sécurisée</p>
+            <p style="margin-top: 10px; font-size: 0.75rem; color: #bdc3c7;">Opérateur système : <span id="pdfBottomUserName"></span></p>
         </div>
 
     </div>
@@ -692,9 +727,13 @@
         let myExpenses = JSON.parse(localStorage.getItem('stoek_premium_expenses')) || [];
         let myBankDeposits = JSON.parse(localStorage.getItem('stoek_premium_bank_deposits')) || [];
         let myTransfers = JSON.parse(localStorage.getItem('stoek_premium_transfers')) || [];
+        
+        // GESTION DYNAMIQUE DES COMMERCIAUX (VENDEURS)
+        let myCommercials = JSON.parse(localStorage.getItem('stoek_premium_commercials')) || ["KDO NUMERICA", "KDO ACCESS", "KDO HORIZON"];
 
         const bootstrapSaleModal = new bootstrap.Modal(document.getElementById('saleModal'));
         const bootstrapEditSaleModal = new bootstrap.Modal(document.getElementById('editSaleModal'));
+        const bootstrapRepairModal = new bootstrap.Modal(document.getElementById('repairModal'));
         const bootstrapExpenseModal = new bootstrap.Modal(document.getElementById('expenseModal'));
         const bootstrapBankModal = new bootstrap.Modal(document.getElementById('bankModal'));
         const bootstrapTransferModal = new bootstrap.Modal(document.getElementById('transferModal'));
@@ -705,9 +744,29 @@
             document.getElementById('structureInput').value = localStorage.getItem('stoek_premium_structure') || "";
             document.getElementById('agencyInput').value = localStorage.getItem('stoek_premium_agency') || "Yaoundé";
             document.getElementById('initialCashInput').value = localStorage.getItem('stoek_premium_initial_cash') || "0";
+            updateCommercialDropdowns();
         }
 
-        // NOUVEAU: Sauvegarder la structure
+        // Met à jour les listes déroulantes des vendeurs partout
+        function updateCommercialDropdowns() {
+            const saleSelect = document.getElementById('saleCommercialSelect');
+            const editSelect = document.getElementById('editSaleCommercialSelect');
+            
+            let htmlSale = '<option value="">-- Sélectionner un vendeur --</option>';
+            let htmlEdit = '';
+
+            myCommercials.forEach(c => {
+                htmlSale += `<option value="${c}">${c}</option>`;
+                htmlEdit += `<option value="${c}">${c}</option>`;
+            });
+
+            htmlSale += '<option value="AUTRE">Autre (Saisir manuellement)</option>';
+            htmlEdit += '<option value="AUTRE">Autre (Saisir manuellement)</option>';
+
+            if(saleSelect) saleSelect.innerHTML = htmlSale;
+            if(editSelect) editSelect.innerHTML = htmlEdit;
+        }
+
         window.saveStructureConfig = function() {
             const val = document.getElementById('structureInput').value;
             localStorage.setItem('stoek_premium_structure', val);
@@ -779,6 +838,20 @@
                 if (catFilter !== "ALL" && product.category !== catFilter) return;
                 if (statusFilter !== "ALL" && product.status !== statusFilter) return;
 
+                // NOUVEAU : Affichage du bouton approprié (Vendre ou Réparer)
+                let actionButtonsHTML = '';
+                if(product.status === 'Défectueux') {
+                    actionButtonsHTML = `
+                        <button class="btn btn-warning btn-sm text-dark fw-bold" onclick="openRepairModal(${idx})">
+                            <i class="bi bi-tools"></i> Réparer
+                        </button>`;
+                } else {
+                    actionButtonsHTML = `
+                        <button class="btn btn-success btn-sm" onclick="openSaleModal(${idx})">
+                            <i class="bi bi-cart-plus"></i> Vendre
+                        </button>`;
+                }
+
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td class="text-muted small fw-bold">${product.ref}</td>
@@ -799,9 +872,7 @@
                     <td class="text-end">${formatCurrency(product.price)}</td>
                     <td class="text-end fw-bold text-primary">${formatCurrency(totalRowValue)}</td>
                     <td class="text-center">
-                        <button class="btn btn-success btn-sm ${product.status === 'Défectueux' ? 'disabled' : ''}" onclick="openSaleModal(${idx})">
-                            <i class="bi bi-cart-plus"></i> Vendre
-                        </button>
+                        ${actionButtonsHTML}
                         <button class="btn btn-outline-danger btn-sm ms-1" onclick="deleteProduct(${idx})"><i class="bi bi-trash"></i></button>
                     </td>
                 `;
@@ -826,7 +897,6 @@
             }
         };
 
-        // Fonction pour afficher/masquer la saisie manuelle du commercial
         window.toggleCustomCommercial = function(selectId, inputId) {
             const val = document.getElementById(selectId).value;
             const customInput = document.getElementById(inputId);
@@ -834,6 +904,54 @@
                 customInput.classList.remove('d-none');
             } else {
                 customInput.classList.add('d-none');
+            }
+        };
+
+        // GESTION DES RÉPARATIONS D'ARTICLES DÉFECTUEUX
+        window.openRepairModal = function(idx) {
+            const p = myStock[idx];
+            if(p.quantity <= 0) { alert("Aucun stock défectueux à réparer."); return; }
+            document.getElementById('repairItemIndex').value = idx;
+            document.getElementById('repairItemName').innerText = p.name;
+            document.getElementById('repairItemStock').innerText = p.quantity;
+            document.getElementById('repairQuantity').value = 1;
+            document.getElementById('repairQuantity').max = p.quantity;
+            bootstrapRepairModal.show();
+        };
+
+        window.confirmRepair = function() {
+            const idx = parseInt(document.getElementById('repairItemIndex').value);
+            const repairQty = parseInt(document.getElementById('repairQuantity').value);
+            const p = myStock[idx];
+
+            if(repairQty > 0 && repairQty <= p.quantity) {
+                // 1. Déduire des défectueux
+                p.quantity -= repairQty;
+
+                // 2. Chercher si le même article existe en statut "Normal"
+                const normalEquivalentIndex = myStock.findIndex(item => item.name === p.name && item.status === 'Normal');
+                
+                if (normalEquivalentIndex !== -1) {
+                    // Si oui, on augmente juste la quantité
+                    myStock[normalEquivalentIndex].quantity += repairQty;
+                } else {
+                    // Sinon, on crée une nouvelle ligne avec le statut Normal
+                    myStock.unshift({
+                        ref: p.ref,
+                        name: p.name,
+                        category: p.category,
+                        quantity: repairQty,
+                        price: p.price,
+                        status: 'Normal'
+                    });
+                }
+
+                localStorage.setItem('stoek_premium_inventory', JSON.stringify(myStock));
+                bootstrapRepairModal.hide();
+                displayStock();
+                alert(`Succès ! ${repairQty} article(s) ont été réintégré(s) dans le stock normal.`);
+            } else { 
+                alert("Quantité invalide ou supérieure au stock défectueux !"); 
             }
         };
 
@@ -846,7 +964,6 @@
             document.getElementById('saleQuantity').value = 1;
             document.getElementById('salePrice').value = p.price;
             
-            // Réinitialisation du commercial à l'ouverture
             document.getElementById('saleCommercialSelect').value = "";
             document.getElementById('saleCommercialCustom').value = "";
             document.getElementById('saleCommercialCustom').classList.add('d-none');
@@ -860,7 +977,6 @@
             const price = parseFloat(document.getElementById('salePrice').value);
             const p = myStock[idx];
 
-            // Validation du nom du vendeur
             let commercial = document.getElementById('saleCommercialSelect').value;
             if (commercial === "") {
                 alert("Veuillez obligatoirement sélectionner ou saisir le nom du vendeur !");
@@ -872,6 +988,14 @@
                     alert("Veuillez saisir le nom du vendeur !");
                     return;
                 }
+                // NOUVEAU : Sauvegarde du vendeur s'il est nouveau
+                const upperComm = commercial.toUpperCase();
+                const exist = myCommercials.find(c => c.toUpperCase() === upperComm);
+                if(!exist) {
+                    myCommercials.push(commercial);
+                    localStorage.setItem('stoek_premium_commercials', JSON.stringify(myCommercials));
+                    updateCommercialDropdowns();
+                }
             }
 
             if(qty > 0 && qty <= p.quantity) {
@@ -881,7 +1005,7 @@
                     date: new Date().toISOString(),
                     ref: p.ref,
                     name: p.name,
-                    commercial: commercial, // On sauvegarde le vendeur ici
+                    commercial: commercial,
                     quantity: qty,
                     price: price,
                     total: qty * price
@@ -950,7 +1074,6 @@
                 const sDate = new Date(sale.date);
                 if(sDate >= start && sDate <= end) {
                     totalRev += sale.total; itemsCount += sale.quantity;
-                    // On gère les anciens enregistrements qui n'avaient peut-être pas de vendeur
                     const vendeurDisplay = sale.commercial ? `<span class="badge bg-primary">${sale.commercial}</span>` : '<span class="text-muted small">Non renseigné</span>';
                     
                     tbodySales.innerHTML += `
@@ -1053,7 +1176,6 @@
                 document.getElementById('editSaleQuantity').value = sale.quantity;
                 document.getElementById('editSalePrice').value = sale.price;
                 
-                // Remplissage du commercial existant
                 const select = document.getElementById('editSaleCommercialSelect');
                 const customInput = document.getElementById('editSaleCommercialCustom');
                 
@@ -1065,7 +1187,7 @@
                     customInput.value = sale.commercial;
                     customInput.classList.remove('d-none');
                 } else {
-                    select.value = "KDO NUMERICA"; // Valeur par défaut
+                    select.value = "";
                     customInput.classList.add('d-none');
                 }
 
@@ -1078,10 +1200,15 @@
             const newQty = parseInt(document.getElementById('editSaleQuantity').value);
             const newPrice = parseFloat(document.getElementById('editSalePrice').value);
             
-            // Récupération du commercial modifié
             let newCommercial = document.getElementById('editSaleCommercialSelect').value;
             if (newCommercial === 'AUTRE') {
                 newCommercial = document.getElementById('editSaleCommercialCustom').value.trim();
+                const upperComm = newCommercial.toUpperCase();
+                if(!myCommercials.find(c => c.toUpperCase() === upperComm) && newCommercial !== "") {
+                    myCommercials.push(newCommercial);
+                    localStorage.setItem('stoek_premium_commercials', JSON.stringify(myCommercials));
+                    updateCommercialDropdowns();
+                }
             }
 
             const sIdx = mySales.findIndex(s => s.id === sId);
@@ -1096,7 +1223,7 @@
                         sale.quantity = newQty; 
                         sale.price = newPrice; 
                         sale.total = newQty * newPrice;
-                        if(newCommercial !== "") sale.commercial = newCommercial; // Mise à jour vendeur
+                        if(newCommercial !== "") sale.commercial = newCommercial; 
 
                         localStorage.setItem('stoek_premium_sales', JSON.stringify(mySales));
                         bootstrapEditSaleModal.hide(); displayStock(); displaySales();
@@ -1143,60 +1270,153 @@
             if(confirm("Supprimer définitivement cet article ?")) { myStock.splice(index, 1); displayStock(); }
         };
 
+        // GESTION DU RAPPORT PDF ENTIÈREMENT REFONDU POUR UN ALIGNEMENT PARFAIT
         window.downloadPDFReport = function() {
             const filter = document.getElementById('reportFilter').value;
             const customDate = document.getElementById('customDateInput').value;
             
-            // Récupération dynamique du nom de la structure pour le PDF
             const currentStructure = localStorage.getItem('stoek_premium_structure') || "MySto€k";
             const currentAgency = localStorage.getItem('stoek_premium_agency') || "Non définie";
             
             document.getElementById('pdfStructureName').innerText = currentStructure;
-            document.getElementById('pdfFooterStructureName').innerText = currentStructure;
             document.getElementById('pdfAgencyLabel').innerText = currentAgency;
             
             let dateText = "Historique complet";
+            let periodTitle = "RÉSUMÉ FINANCIER DE L'HISTORIQUE COMPLET";
             const todayStr = new Date().toLocaleDateString('fr-FR');
             
-            if(filter === 'today') dateText = "Date du rapport : " + todayStr;
-            else if(filter === 'yesterday') { let d = new Date(); d.setDate(d.getDate()-1); dateText = "Journée du : " + d.toLocaleDateString('fr-FR'); }
-            else if(filter === 'week') { let d = new Date(); d.setDate(d.getDate()-7); dateText = "Du " + d.toLocaleDateString('fr-FR') + " au " + todayStr; }
-            else if(filter === 'month') { let d = new Date(); let firstDay = new Date(d.getFullYear(), d.getMonth(), 1); dateText = "Mois : Du " + firstDay.toLocaleDateString('fr-FR') + " au " + todayStr; }
-            else if(filter === 'custom' && customDate) { dateText = "Rapport du : " + new Date(customDate).toLocaleDateString('fr-FR'); }
+            if(filter === 'today') {
+                dateText = "Date du rapport : " + todayStr;
+                periodTitle = "RÉSUMÉ FINANCIER DE LA JOURNÉE DU " + todayStr;
+            }
+            else if(filter === 'yesterday') { 
+                let d = new Date(); d.setDate(d.getDate()-1); 
+                dateText = "Journée du : " + d.toLocaleDateString('fr-FR'); 
+                periodTitle = "RÉSUMÉ FINANCIER DU " + d.toLocaleDateString('fr-FR');
+            }
+            else if(filter === 'week') { 
+                let d = new Date(); d.setDate(d.getDate()-7); 
+                dateText = "Du " + d.toLocaleDateString('fr-FR') + " au " + todayStr; 
+                periodTitle = "RÉSUMÉ FINANCIER DES 7 DERNIERS JOURS";
+            }
+            else if(filter === 'month') { 
+                let d = new Date(); let firstDay = new Date(d.getFullYear(), d.getMonth(), 1); 
+                dateText = "Mois : Du " + firstDay.toLocaleDateString('fr-FR') + " au " + todayStr; 
+                periodTitle = "RÉSUMÉ FINANCIER DU MOIS EN COURS";
+            }
+            else if(filter === 'custom' && customDate) { 
+                let cDateStr = new Date(customDate).toLocaleDateString('fr-FR');
+                dateText = "Rapport du : " + cDateStr; 
+                periodTitle = "RÉSUMÉ FINANCIER DU " + cDateStr;
+            }
 
             document.getElementById('pdfPeriodLabel').innerText = dateText;
+            document.getElementById('pdfDynamicPeriodTitle').innerText = periodTitle;
             document.getElementById('pdfGenerationDate').innerText = new Date().toLocaleString('fr-FR');
+            
             document.getElementById('pdfInitialCash').innerText = formatCurrency(localStorage.getItem('stoek_premium_initial_cash') || 0);
             document.getElementById('pdfGlobalCashDesk').innerText = document.getElementById('globalCashDeskDisplay').innerText;
             document.getElementById('pdfRevenue').innerText = document.getElementById('revenueDisplay').innerText;
             document.getElementById('pdfExpenses').innerText = document.getElementById('expensesDisplay').innerText;
             document.getElementById('pdfNet').innerText = document.getElementById('netDisplay').innerText;
 
-            const copyTable = (sourceId, targetBodyId, sectionId, keepLastChild = false) => {
-                const targetBody = document.getElementById(targetBodyId); targetBody.innerHTML = '';
-                const rows = document.querySelectorAll(`#${sourceId} tr`);
-                if(rows.length === 0) { document.getElementById(sectionId).style.display = 'none'; } 
-                else {
-                    document.getElementById(sectionId).style.display = 'block';
-                    rows.forEach(tr => {
-                        let trClone = tr.cloneNode(true);
-                        // On supprime la colonne des actions (boutons) sauf si on demande explicitement de la garder
-                        if(!keepLastChild && trClone.lastElementChild) trClone.removeChild(trClone.lastElementChild);
-                        targetBody.appendChild(trClone);
-                    });
+            // Définition de la période (start/end) pour extraire les bonnes données pour les tableaux PDF
+            let start = new Date(0), end = new Date(); end.setHours(23,59,59,999);
+            const current = new Date();
+            if(filter === 'today') { start = new Date(); start.setHours(0,0,0,0); } 
+            else if(filter === 'yesterday') { start = new Date(); start.setDate(start.getDate() - 1); start.setHours(0,0,0,0); end = new Date(); end.setDate(end.getDate() - 1); end.setHours(23,59,59,999); } 
+            else if(filter === 'week') { start = new Date(); start.setDate(start.getDate() - 7); start.setHours(0,0,0,0); } 
+            else if(filter === 'month') { start = new Date(current.getFullYear(), current.getMonth(), 1); } 
+            else if(filter === 'custom' && customDate) { start = new Date(customDate); start.setHours(0,0,0,0); end = new Date(customDate); end.setHours(23,59,59,999); }
+
+            // 1. Génération du tableau des Ventes (SANS la référence, colonnes parfaitement alignées)
+            const pdfSalesBody = document.getElementById('pdfSalesTableBody');
+            pdfSalesBody.innerHTML = '';
+            let salesCount = 0;
+            [...mySales].reverse().forEach(sale => {
+                const sDate = new Date(sale.date);
+                if(sDate >= start && sDate <= end) {
+                    salesCount++;
+                    pdfSalesBody.innerHTML += `
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 6px;">${sDate.toLocaleDateString('fr-FR')} ${sDate.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})}</td>
+                            <td style="border: 1px solid #ddd; padding: 6px; font-weight: bold;">${sale.name}</td>
+                            <td style="border: 1px solid #ddd; padding: 6px; font-style: italic;">${sale.commercial || '-'}</td>
+                            <td style="border: 1px solid #ddd; padding: 6px; text-align: center; font-weight: bold;">${sale.quantity}</td>
+                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right; color: #27ae60;">${formatCurrency(sale.total)}</td>
+                        </tr>`;
                 }
-            };
+            });
+            document.getElementById('pdf-sales-section').style.display = salesCount > 0 ? 'block' : 'none';
 
-            copyTable('salesTableBody', 'pdfSalesTableBody', 'pdf-sales-section', false);
-            copyTable('expensesTableBody', 'pdfExpensesTableBody', 'pdf-expenses-section', false);
-            copyTable('bankTableBody', 'pdfBankTableBody', 'pdf-bank-section', false);
-            copyTable('transfersTableBody', 'pdfTransfersTableBody', 'pdf-transfers-section', true);
+            // 2. Génération du tableau des Dépenses
+            const pdfExpBody = document.getElementById('pdfExpensesTableBody');
+            pdfExpBody.innerHTML = '';
+            let expCount = 0;
+            myExpenses.forEach(exp => {
+                const eDate = new Date(exp.date);
+                if(eDate >= start && eDate <= end) {
+                    expCount++;
+                    pdfExpBody.innerHTML += `
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 6px;">${eDate.toLocaleDateString('fr-FR')}</td>
+                            <td style="border: 1px solid #ddd; padding: 6px;">${exp.description}</td>
+                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right; color: #c0392b;">${formatCurrency(exp.amount)}</td>
+                        </tr>`;
+                }
+            });
+            document.getElementById('pdf-expenses-section').style.display = expCount > 0 ? 'block' : 'none';
 
-            const element = document.getElementById('pdf-report-container'); element.classList.remove('d-none');
+            // 3. Génération du tableau Banque
+            const pdfBankBody = document.getElementById('pdfBankTableBody');
+            pdfBankBody.innerHTML = '';
+            let bankCount = 0;
+            myBankDeposits.forEach(bank => {
+                const bDate = new Date(bank.date);
+                if(bDate >= start && bDate <= end) {
+                    bankCount++;
+                    pdfBankBody.innerHTML += `
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 6px;">${bDate.toLocaleDateString('fr-FR')}</td>
+                            <td style="border: 1px solid #ddd; padding: 6px;">${bank.description}</td>
+                            <td style="border: 1px solid #ddd; padding: 6px; text-align: right; color: #2980b9;">${formatCurrency(bank.amount)}</td>
+                        </tr>`;
+                }
+            });
+            document.getElementById('pdf-bank-section').style.display = bankCount > 0 ? 'block' : 'none';
+
+            // 4. Génération du tableau Transferts
+            const pdfTransfersBody = document.getElementById('pdfTransfersTableBody');
+            pdfTransfersBody.innerHTML = '';
+            let trCount = 0;
+            myTransfers.forEach(tr => {
+                const tDate = new Date(tr.date);
+                if(tDate >= start && tDate <= end) {
+                    trCount++;
+                    pdfTransfersBody.innerHTML += `
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 6px;">${tDate.toLocaleDateString('fr-FR')}</td>
+                            <td style="border: 1px solid #ddd; padding: 6px; font-weight: bold;">${tr.destination}</td>
+                            <td style="border: 1px solid #ddd; padding: 6px;">${tr.name}</td>
+                            <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${tr.quantity}</td>
+                        </tr>`;
+                }
+            });
+            document.getElementById('pdf-transfers-section').style.display = trCount > 0 ? 'block' : 'none';
+
+            // Démarrage de la génération PDF
+            const element = document.getElementById('pdf-report-container'); 
+            element.classList.remove('d-none');
+            
             html2pdf().set({
-                margin: 10, filename: 'Rapport_' + currentStructure.replace(/[^a-z0-9]/gi, '_') + '_' + currentAgency.replace(/[^a-z0-9]/gi, '_') + '_' + Date.now() + '.pdf',
-                image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).from(element).save().then(() => { element.classList.add('d-none'); });
+                margin: 10, 
+                filename: 'Rapport_' + currentStructure.replace(/[^a-z0-9]/gi, '_') + '_' + currentAgency.replace(/[^a-z0-9]/gi, '_') + '_' + Date.now() + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 }, 
+                html2canvas: { scale: 2 }, 
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).from(element).save().then(() => { 
+                element.classList.add('d-none'); 
+            });
         };
 
         initConfigurationFields();
