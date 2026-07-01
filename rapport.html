@@ -13,8 +13,10 @@
         .card { border: none; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .table-responsive { border-radius: 10px; overflow: hidden; }
         thead th { font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px; }
-        .fab-btn { box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: transform 0.2s; }
-        .fab-btn:hover { transform: scale(1.05); }
+        
+        /* CSS spécifique pour empêcher la coupure des lignes dans le PDF */
+        tr { page-break-inside: avoid; }
+        
         #pdf-report-container { padding: 40px; background: #fff; line-height: 1.6; color: #333; }
         .letter-header { margin-bottom: 30px; border-bottom: 2px solid #0d6efd; padding-bottom: 15px; }
         .stats-box { background: #f8f9fa; border-left: 4px solid #0d6efd; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0; }
@@ -32,6 +34,7 @@
     </nav>
 
     <div class="container-fluid px-4">
+        <!-- Configuration Commercial -->
         <div class="card p-3 mb-4 bg-white shadow-sm border-top border-primary border-4">
             <div class="row align-items-end">
                 <div class="col-md-4 mb-3 mb-md-0">
@@ -52,6 +55,7 @@
         </div>
 
         <div class="row">
+            <!-- Catalogue pour vendre -->
             <div class="col-xl-8 mb-4">
                 <div class="card p-0 h-100 shadow-sm">
                     <div class="card-header bg-light p-3 d-flex justify-content-between align-items-center">
@@ -74,6 +78,7 @@
                 </div>
             </div>
 
+            <!-- Ajouter un article au catalogue & Génération PDF -->
             <div class="col-xl-4 mb-4">
                 <div class="card p-4 mb-4 shadow-sm border-top border-success border-4">
                     <h6 class="mb-3 text-success fw-bold"><i class="bi bi-plus-circle me-2"></i>Article non listé ? Ajoute-le</h6>
@@ -111,6 +116,7 @@
             </div>
         </div>
 
+        <!-- Historique des ventes -->
         <div class="row">
             <div class="col-12">
                 <div class="card p-0 shadow-sm mb-5">
@@ -139,6 +145,7 @@
         </div>
     </div>
 
+    <!-- Modal Enregistrer Vente -->
     <div class="modal fade" id="sellModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -151,22 +158,25 @@
                     <input type="hidden" id="sellItemCat">
                     <h5 id="sellItemName" class="text-primary mb-3 fw-bold"></h5>
                     
+                    <div class="mb-3 p-3 bg-light border rounded">
+                        <label class="form-label fw-bold">Date de la vente</label>
+                        <input type="date" id="sellDate" class="form-control mb-3" required>
+                        <small class="text-muted d-block mb-3">Tu peux modifier cette date si tu as oublié d'enregistrer une vente passée.</small>
+                        
+                        <label class="form-label fw-bold">Ville / Zone de la vente</label>
+                        <select id="sellCitySelect" class="form-select mb-2" onchange="toggleCityInput()"></select>
+                        <input type="text" id="sellCityInput" class="form-control d-none" placeholder="Saisir la nouvelle ville...">
+                    </div>
+
                     <div class="row mb-3">
                         <div class="col-6">
                             <label class="form-label fw-bold">Quantité vendue</label>
                             <input type="number" id="sellQuantity" class="form-control" min="1" value="1" required>
                         </div>
                         <div class="col-6">
-                            <label class="form-label fw-bold text-success">Prix de vente final (XAF)</label>
-                            <input type="number" id="sellPrice" class="form-control border-success" placeholder="Modifiable" required>
-                            <small class="text-muted">Tu peux ajuster le prix ici.</small>
+                            <label class="form-label fw-bold text-success">Prix final (XAF)</label>
+                            <input type="number" id="sellPrice" class="form-control border-success" required>
                         </div>
-                    </div>
-
-                    <div class="mb-3 p-3 bg-light border rounded">
-                        <label class="form-label fw-bold">Ville / Zone de la vente</label>
-                        <select id="sellCitySelect" class="form-select mb-2" onchange="toggleCityInput()"></select>
-                        <input type="text" id="sellCityInput" class="form-control d-none" placeholder="Saisir la nouvelle ville...">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -177,6 +187,7 @@
         </div>
     </div>
 
+    <!-- Conteneur caché pour le PDF -->
     <div id="pdf-report-container" class="d-none">
         <div class="letter-header d-flex justify-content-between align-items-start">
             <div>
@@ -217,7 +228,7 @@
             <ul id="pdfCategoryBreakdown" style="line-height: 1.8;"></ul>
         </div>
 
-        <p>Veuillez trouver ci-dessous le tableau récapitulatif des transactions enregistrées pour cette période :</p>
+        <p>Veuillez trouver ci-dessous le tableau récapitulatif des transactions enregistrées pour ce mois :</p>
 
         <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.85rem;">
             <thead>
@@ -236,37 +247,37 @@
             <p>Cordialement,</p>
             <p><strong id="pdfSignName"></strong></p>
         </div>
+
+        <!-- Mention du système MySto€k en bas de page -->
+        <div style="margin-top: 40px; padding-top: 15px; border-top: 1px solid #ddd; text-align: center; font-size: 0.8rem; color: #7f8c8d;">
+            Rapport d'activité généré et sécurisé via <strong>MySto€k</strong> - Technologie de Gestion Intelligente
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Formateur de monnaie
         const formatCurrency = (amount) => new Intl.NumberFormat('fr-FR').format(amount) + " XAF";
 
-        // Bases de données locales isolées pour le rapport
         let myCatalogue = JSON.parse(localStorage.getItem('stoek_premium_rapport_inventory')) || null;
         let mySales = JSON.parse(localStorage.getItem('stoek_premium_rapport_sales')) || [];
         let myCities = JSON.parse(localStorage.getItem('stoek_premium_rapport_cities')) || ["Bertoua", "Yaoundé", "Douala"];
 
-        // Initialisation du catalogue s'il est vide (copie depuis le dashboard s'il existe, sinon vide)
         if (!myCatalogue) {
             const globalStock = JSON.parse(localStorage.getItem('stoek_premium_inventory'));
             if(globalStock) {
                 myCatalogue = globalStock.map(item => ({ ref: item.ref, name: item.name, category: item.category, price: item.price }));
             } else {
-                myCatalogue = []; // Vide si le dashboard n'a jamais été ouvert
+                myCatalogue = [];
             }
             localStorage.setItem('stoek_premium_rapport_inventory', JSON.stringify(myCatalogue));
         }
 
         const sellModal = new bootstrap.Modal(document.getElementById('sellModal'));
 
-        // Initialisation de la page
         function initPage() {
             document.getElementById('commercialName').value = localStorage.getItem('stoek_premium_rapport_comm_name') || "";
             document.getElementById('bossName').value = localStorage.getItem('stoek_premium_rapport_boss_name') || "";
             
-            // Met le mois actuel par défaut dans l'input month
             const today = new Date();
             const yyyy = today.getFullYear();
             let mm = today.getMonth() + 1;
@@ -317,10 +328,9 @@
             });
         }
 
-        // Ajouter un produit personnalisé
         document.getElementById('newProductForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const newRef = "C" + Date.now().toString().slice(-4); // Génère une ref unique
+            const newRef = "C" + Date.now().toString().slice(-4);
             myCatalogue.unshift({
                 ref: newRef,
                 name: document.getElementById('npName').value,
@@ -340,6 +350,9 @@
             document.getElementById('sellPrice').value = item.price;
             document.getElementById('sellQuantity').value = 1;
             
+            // Permet de présélectionner la date du jour, mais modifiable
+            document.getElementById('sellDate').value = new Date().toISOString().split('T')[0];
+            
             document.getElementById('sellCitySelect').value = "";
             document.getElementById('sellCityInput').value = "";
             document.getElementById('sellCityInput').classList.add('d-none');
@@ -353,6 +366,9 @@
             const name = document.getElementById('sellItemName').innerText;
             const qty = parseInt(document.getElementById('sellQuantity').value);
             const price = parseFloat(document.getElementById('sellPrice').value);
+            
+            // Récupère la date choisie par l'utilisateur
+            const selectedDate = document.getElementById('sellDate').value;
             
             let city = document.getElementById('sellCitySelect').value;
             
@@ -369,10 +385,10 @@
                 alert("Veuillez choisir ou créer une ville !"); return;
             }
 
-            if(qty > 0 && price >= 0) {
+            if(qty > 0 && price >= 0 && selectedDate) {
                 const sale = {
                     id: 'rsale_' + Date.now(),
-                    date: new Date().toISOString(),
+                    date: new Date(selectedDate).toISOString(), // On sauvegarde la date personnalisée
                     ref: ref,
                     name: name,
                     category: cat,
@@ -382,11 +398,14 @@
                     city: city
                 };
                 mySales.push(sale);
+                // On trie les ventes par date pour que l'historique soit logique même si on ajoute une date passée
+                mySales.sort((a, b) => new Date(a.date) - new Date(b.date));
+                
                 localStorage.setItem('stoek_premium_rapport_sales', JSON.stringify(mySales));
                 sellModal.hide();
                 displaySales();
             } else {
-                alert("Quantité ou prix invalide !");
+                alert("Veuillez remplir correctement la quantité, le prix et la date !");
             }
         }
 
@@ -395,6 +414,7 @@
             tbody.innerHTML = '';
             let globalRev = 0;
 
+            // On affiche du plus récent au plus ancien
             [...mySales].reverse().forEach(sale => {
                 globalRev += sale.total;
                 const sDate = new Date(sale.date);
@@ -424,7 +444,6 @@
             }
         }
 
-        // ALGORITHME DE GÉNÉRATION DU RAPPORT PDF
         window.generateAndDownloadPDF = function() {
             const selectedMonthStr = document.getElementById('reportMonthSelect').value;
             if(!selectedMonthStr) { alert("Veuillez sélectionner un mois !"); return; }
@@ -434,12 +453,11 @@
 
             const [year, month] = selectedMonthStr.split('-');
             const targetYear = parseInt(year);
-            const targetMonth = parseInt(month) - 1; // JS months are 0-indexed
+            const targetMonth = parseInt(month) - 1;
 
             const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
             const monthLabel = `${monthNames[targetMonth]} ${targetYear}`;
 
-            // Calculs pour le mois cible
             let currentMonthSales = [];
             let totalRevenue = 0;
             let totalItems = 0;
@@ -465,14 +483,12 @@
                 alert("Aucune vente enregistrée pour ce mois !"); return;
             }
 
-            // Calcul de la meilleure ville
             let bestCity = "Aucune";
             let maxCitySales = 0;
             for (const [city, qty] of Object.entries(citiesStats)) {
                 if (qty > maxCitySales) { maxCitySales = qty; bestCity = city; }
             }
 
-            // Calcul du mois précédent pour comparaison
             let prevYear = targetMonth === 0 ? targetYear - 1 : targetYear;
             let prevMonth = targetMonth === 0 ? 11 : targetMonth - 1;
             let prevMonthRevenue = 0;
@@ -484,18 +500,17 @@
                 }
             });
 
-            // Génération du texte de comparaison
+            // Retrait de la longue phrase pour le premier rapport
             let compText = "";
-            if (prevMonthRevenue === 0) {
-                compText = "Ceci constitue mon premier rapport d'activité enregistré dans le système sur cette période, établissant ainsi une base solide pour mes objectifs futurs.";
-            } else if (totalRevenue > prevMonthRevenue) {
-                let evolution = totalRevenue - prevMonthRevenue;
-                compText = `Je suis heureux(se) de vous informer que mon chiffre d'affaires est en augmentation par rapport au mois précédent. J'ai généré une croissance de ${formatCurrency(evolution)}, prouvant l'efficacité de la stratégie mise en place.`;
-            } else {
-                compText = `Bien que le chiffre d'affaires de ce mois soit légèrement en deçà de celui du mois précédent (qui était de ${formatCurrency(prevMonthRevenue)}), de nouvelles prospections ont été initiées et porteront leurs fruits très prochainement.`;
+            if (prevMonthRevenue > 0) {
+                if (totalRevenue > prevMonthRevenue) {
+                    let evolution = totalRevenue - prevMonthRevenue;
+                    compText = `Je suis heureux(se) de vous informer que mon chiffre d'affaires est en augmentation par rapport au mois précédent. J'ai généré une croissance de ${formatCurrency(evolution)}, prouvant l'efficacité de la stratégie mise en place.`;
+                } else {
+                    compText = `Bien que le chiffre d'affaires de ce mois soit légèrement en deçà de celui du mois précédent (qui était de ${formatCurrency(prevMonthRevenue)}), de nouvelles prospections ont été initiées et porteront leurs fruits très prochainement.`;
+                }
             }
 
-            // Remplissage du PDF HTML
             document.getElementById('pdfDate').innerText = new Date().toLocaleDateString('fr-FR');
             document.getElementById('pdfCommercialName').innerText = commName;
             document.getElementById('pdfBossName').innerText = bossName;
@@ -507,7 +522,6 @@
             document.getElementById('pdfBestCity').innerText = `${bestCity} (${maxCitySales} article(s))`;
             document.getElementById('pdfSignName').innerText = commName;
 
-            // Remplissage des catégories
             const catUl = document.getElementById('pdfCategoryBreakdown');
             catUl.innerHTML = '';
             for (const [cat, qty] of Object.entries(categoriesStats)) {
@@ -516,7 +530,6 @@
                 }
             }
 
-            // Remplissage du tableau détaillé
             const pdfTableBody = document.getElementById('pdfDetailsTableBody');
             pdfTableBody.innerHTML = '';
             currentMonthSales.forEach(sale => {
@@ -532,16 +545,17 @@
                 `;
             });
 
-            // Lancement de html2pdf
             const element = document.getElementById('pdf-report-container');
             element.classList.remove('d-none');
             
+            // Configuration pagebreak ajoutée pour empêcher la coupure des lignes
             html2pdf().set({
                 margin: 15,
                 filename: `Rapport_Commercial_${commName.replace(/[^a-z0-9]/gi, '_')}_${monthLabel.replace(' ','_')}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['css', 'legacy'], avoid: 'tr' } 
             }).from(element).save().then(() => {
                 element.classList.add('d-none');
             });
