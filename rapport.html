@@ -20,7 +20,6 @@
         .letter-header { margin-bottom: 30px; border-bottom: 2px solid #0d6efd; padding-bottom: 15px; }
         .stats-box { background: #f8f9fa; border-left: 4px solid #0d6efd; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0; }
         
-        /* Bouton flottant */
         .fab-container { position: fixed; bottom: 20px; right: 20px; z-index: 1000; }
         .fab-btn { box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: transform 0.2s; }
         .fab-btn:hover { transform: scale(1.05); }
@@ -30,22 +29,20 @@
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm mb-4">
         <div class="container-fluid px-4">
-            <!-- Modification du lien de retour vers index.html -->
             <a class="navbar-brand text-primary" href="index.html">
                 <i class="bi bi-box-arrow-left text-white me-2"></i>
                 MySto€k <span class="fs-6 text-white fw-normal ms-2">- Espace Commercial</span>
             </a>
             <div class="ms-auto">
-                <a href="index.html" class="btn btn-outline-danger btn-sm" onclick="localStorage.removeItem('mystoek_target_page')">
+                <button id="btnLogoutRapport" class="btn btn-outline-danger btn-sm">
                     <i class="bi bi-power me-1"></i>Déconnexion
-                </a>
+                </button>
             </div>
         </div>
     </nav>
 
     <div class="container-fluid px-4">
         
-        <!-- Configuration Commercial -->
         <div class="card p-3 mb-4 bg-white shadow-sm border-top border-primary border-4">
             <div class="row align-items-end">
                 <div class="col-md-4 mb-3 mb-md-0">
@@ -66,7 +63,6 @@
         </div>
 
         <div class="row">
-            <!-- Catalogue pour vendre -->
             <div class="col-xl-8 mb-4">
                 <div class="card p-0 h-100 shadow-sm">
                     <div class="card-header bg-light p-3 d-flex justify-content-between align-items-center">
@@ -89,7 +85,6 @@
                 </div>
             </div>
 
-            <!-- Ajouter un article au catalogue & Génération PDF -->
             <div class="col-xl-4 mb-4">
                 <div class="card p-4 mb-4 shadow-sm border-top border-success border-4">
                     <h6 class="mb-3 text-success fw-bold"><i class="bi bi-plus-circle me-2"></i>Article non listé ? Ajoute-le</h6>
@@ -127,7 +122,6 @@
             </div>
         </div>
 
-        <!-- NOUVEAU : Tableau de Bord des Performances (Comparaison) -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card p-4 shadow-sm bg-dark text-white border-bottom border-warning border-4">
@@ -152,16 +146,13 @@
                             </div>
                         </div>
                         <div class="col-md-4 mb-3 d-flex align-items-center justify-content-center">
-                            <div id="performanceMessage" class="fw-bold fs-5 w-100 p-3 rounded">
-                                <!-- Le message d'encouragement s'affichera ici -->
-                            </div>
+                            <div id="performanceMessage" class="fw-bold fs-5 w-100 p-3 rounded"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Historique des ventes -->
         <div class="row">
             <div class="col-12">
                 <div class="card p-0 shadow-sm mb-5">
@@ -190,14 +181,12 @@
         </div>
     </div>
 
-    <!-- BOUTON FLOTTANT : C'EST QUOI MYSTOEK -->
     <div class="fab-container">
         <a href="about.html" class="btn btn-primary text-white rounded-pill px-4 py-3 fab-btn">
             <i class="bi bi-info-circle-fill me-2 fs-5 align-middle"></i><span class="fw-bold align-middle">C'est quoi MySto€k ?</span>
         </a>
     </div>
 
-    <!-- Modal Enregistrer Vente -->
     <div class="modal fade" id="sellModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -239,7 +228,6 @@
         </div>
     </div>
 
-    <!-- Conteneur caché pour le PDF -->
     <div id="pdf-report-container" class="d-none">
         <div class="letter-header d-flex justify-content-between align-items-start">
             <div>
@@ -307,6 +295,15 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // NOUVEAUTÉ : Relais Local et Cloud
+        window.setLocalAndCloud = function(key, value) {
+            let strValue = (typeof value === 'string') ? value : JSON.stringify(value);
+            localStorage.setItem(key, strValue);
+            if (window.syncToCloud) {
+                window.syncToCloud(key, strValue);
+            }
+        };
+
         const formatCurrency = (amount) => new Intl.NumberFormat('fr-FR').format(amount) + " XAF";
 
         let myCatalogue = JSON.parse(localStorage.getItem('stoek_premium_rapport_inventory')) || null;
@@ -320,12 +317,19 @@
             } else {
                 myCatalogue = [];
             }
-            localStorage.setItem('stoek_premium_rapport_inventory', JSON.stringify(myCatalogue));
+            setLocalAndCloud('stoek_premium_rapport_inventory', myCatalogue);
         }
+
+        // Fonction d'actualisation Firebase vers variables globales
+        window.refreshDataFromLocal = function() {
+            myCatalogue = JSON.parse(localStorage.getItem('stoek_premium_rapport_inventory')) || [];
+            mySales = JSON.parse(localStorage.getItem('stoek_premium_rapport_sales')) || [];
+            myCities = JSON.parse(localStorage.getItem('stoek_premium_rapport_cities')) || ["Bertoua", "Yaoundé", "Douala"];
+        };
 
         const sellModal = new bootstrap.Modal(document.getElementById('sellModal'));
 
-        function initPage() {
+        window.initPage = function() {
             document.getElementById('commercialName').value = localStorage.getItem('stoek_premium_rapport_comm_name') || "";
             document.getElementById('bossName').value = localStorage.getItem('stoek_premium_rapport_boss_name') || "";
             
@@ -338,12 +342,12 @@
             updateCitySelect();
             displayCatalogue();
             displaySales();
-        }
+        };
 
-        function saveConfig() {
-            localStorage.setItem('stoek_premium_rapport_comm_name', document.getElementById('commercialName').value);
-            localStorage.setItem('stoek_premium_rapport_boss_name', document.getElementById('bossName').value);
-        }
+        window.saveConfig = function() {
+            setLocalAndCloud('stoek_premium_rapport_comm_name', document.getElementById('commercialName').value);
+            setLocalAndCloud('stoek_premium_rapport_boss_name', document.getElementById('bossName').value);
+        };
 
         function updateCitySelect() {
             const select = document.getElementById('sellCitySelect');
@@ -388,7 +392,7 @@
                 category: document.getElementById('npCategory').value,
                 price: parseFloat(document.getElementById('npPrice').value)
             });
-            localStorage.setItem('stoek_premium_rapport_inventory', JSON.stringify(myCatalogue));
+            setLocalAndCloud('stoek_premium_rapport_inventory', myCatalogue);
             displayCatalogue();
             this.reset();
         });
@@ -426,7 +430,7 @@
                 const upperCity = city.toUpperCase();
                 if(!myCities.find(c => c.toUpperCase() === upperCity)) {
                     myCities.push(city);
-                    localStorage.setItem('stoek_premium_rapport_cities', JSON.stringify(myCities));
+                    setLocalAndCloud('stoek_premium_rapport_cities', myCities);
                     updateCitySelect();
                 }
             } else if (city === "") {
@@ -448,7 +452,7 @@
                 mySales.push(sale);
                 mySales.sort((a, b) => new Date(a.date) - new Date(b.date));
                 
-                localStorage.setItem('stoek_premium_rapport_sales', JSON.stringify(mySales));
+                setLocalAndCloud('stoek_premium_rapport_sales', mySales);
                 sellModal.hide();
                 displaySales();
             } else {
@@ -462,7 +466,6 @@
             const currentMonth = now.getMonth();
             const currentDay = now.getDate();
 
-            // Mois précédent
             let prevYear = currentMonth === 0 ? currentYear - 1 : currentYear;
             let prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
 
@@ -476,21 +479,17 @@
                 const sMonth = sDate.getMonth();
                 const sDay = sDate.getDate();
 
-                // Total global des articles
                 totalItemsAllTime += sale.quantity;
 
-                // Calcul du mois courant (du 1er jusqu'à aujourd'hui)
                 if (sYear === currentYear && sMonth === currentMonth && sDay <= currentDay) {
                     currentMonthRevenue += sale.total;
                 }
                 
-                // Calcul du mois passé (du 1er jusqu'à la MÊME date que le mois en cours)
                 if (sYear === prevYear && sMonth === prevMonth && sDay <= currentDay) {
                     prevMonthRevenue += sale.total;
                 }
             });
 
-            // Affichage dans le tableau de bord
             document.getElementById('globalTotalItems').innerText = totalItemsAllTime;
             document.getElementById('currentDayDisplay').innerText = currentDay;
             document.getElementById('currentMonthRevenueDisplay').innerText = formatCurrency(currentMonthRevenue);
@@ -516,7 +515,7 @@
             }
         }
 
-        function displaySales() {
+        window.displaySales = function() {
             const tbody = document.getElementById('salesTableBody');
             tbody.innerHTML = '';
             let globalRev = 0;
@@ -540,15 +539,13 @@
                 `;
             });
             document.getElementById('globalRevenueDisplay').innerText = formatCurrency(globalRev);
-            
-            // On met à jour les stats comparatives à chaque affichage
             updatePerformanceStats();
         }
 
         window.deleteSale = function(id) {
             if(confirm("Supprimer cette vente de ton historique ?")) {
                 mySales = mySales.filter(s => s.id !== id);
-                localStorage.setItem('stoek_premium_rapport_sales', JSON.stringify(mySales));
+                setLocalAndCloud('stoek_premium_rapport_sales', mySales);
                 displaySales();
             }
         }
@@ -669,6 +666,83 @@
         }
 
         initPage();
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAYcjkrXKcjqFnf8E91JZWU1lMGS-yxSOU",
+            authDomain: "kdo-cameroun.firebaseapp.com",
+            projectId: "kdo-cameroun",
+            storageBucket: "kdo-cameroun.firebasestorage.app",
+            messagingSenderId: "445876564547",
+            appId: "1:445876564547:web:3b01d5bf1839458cbd1af6"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        window.currentUser = null;
+
+        window.syncToCloud = async function(key, strValue) {
+            if (!window.currentUser) return;
+            try {
+                await setDoc(doc(db, "users", window.currentUser.uid, "rapportData", key), { value: strValue });
+            } catch (error) {
+                console.error("Erreur de sauvegarde Cloud:", error);
+            }
+        };
+
+        async function syncCloudToLocal() {
+            if (!window.currentUser) return;
+            try {
+                const keysToSync = [
+                    'stoek_premium_rapport_inventory', 'stoek_premium_rapport_sales', 
+                    'stoek_premium_rapport_cities', 'stoek_premium_rapport_comm_name', 
+                    'stoek_premium_rapport_boss_name'
+                ];
+                let cloudDataFound = false;
+
+                for (const k of keysToSync) {
+                    const docRef = doc(db, "users", window.currentUser.uid, "rapportData", k);
+                    const snap = await getDoc(docRef);
+                    if (snap.exists()) {
+                        localStorage.setItem(k, snap.data().value);
+                        cloudDataFound = true;
+                    } else {
+                        const localData = localStorage.getItem(k);
+                        if (localData) {
+                            window.syncToCloud(k, localData);
+                        }
+                    }
+                }
+
+                if (cloudDataFound && window.refreshDataFromLocal) {
+                    window.refreshDataFromLocal();
+                    window.initPage();
+                }
+            } catch (err) {
+                console.error("Erreur de synchronisation Cloud -> Local:", err);
+            }
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.currentUser = user;
+                syncCloudToLocal();
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        document.getElementById('btnLogoutRapport').addEventListener('click', () => {
+            localStorage.removeItem('mystoek_target_page');
+            signOut(auth).then(() => { window.location.href = "index.html"; });
+        });
     </script>
 </body>
 </html>

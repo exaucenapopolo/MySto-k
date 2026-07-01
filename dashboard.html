@@ -683,6 +683,16 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        // NOUVEAUTÉ : Fonction relais pour sauvegarder en local ET dans le Cloud
+        window.setLocalAndCloud = function(key, value) {
+            let strValue = (typeof value === 'string') ? value : JSON.stringify(value);
+            localStorage.setItem(key, strValue);
+            // S'il est connecté, ça envoie à Firestore en arrière-plan
+            if (window.syncToCloud) {
+                window.syncToCloud(key, strValue);
+            }
+        };
+
         const initialExcelDatabase = [
             { ref: "0001", name: "Lenovo 300e 180Go / 4 Go / 1,10 GHz / Tactlle", category: "Laptop", quantity: 3, price: 70000, status: "Normal" },
             { ref: "0002", name: "Lenovo X220 320Go / 4Go / 2,60 GHz / i5", category: "Laptop", quantity: 1, price: 90000, status: "Normal" },
@@ -719,8 +729,8 @@
         
         if (!hasInitialized) {
             myStock = [...initialExcelDatabase];
-            localStorage.setItem('mystok_initialized_v2', 'true');
-            localStorage.setItem('stoek_premium_inventory', JSON.stringify(myStock));
+            setLocalAndCloud('mystok_initialized_v2', 'true');
+            setLocalAndCloud('stoek_premium_inventory', myStock);
         }
 
         let mySales = JSON.parse(localStorage.getItem('stoek_premium_sales')) || [];
@@ -730,6 +740,16 @@
         
         // GESTION DYNAMIQUE DES COMMERCIAUX (VENDEURS)
         let myCommercials = JSON.parse(localStorage.getItem('stoek_premium_commercials')) || ["KDO NUMERICA", "KDO ACCESS", "KDO HORIZON"];
+
+        // NOUVEAUTÉ : Fonction pour actualiser les variables globales après une récupération depuis Firebase
+        window.refreshDataFromLocal = function() {
+            myStock = JSON.parse(localStorage.getItem('stoek_premium_inventory')) || [];
+            mySales = JSON.parse(localStorage.getItem('stoek_premium_sales')) || [];
+            myExpenses = JSON.parse(localStorage.getItem('stoek_premium_expenses')) || [];
+            myBankDeposits = JSON.parse(localStorage.getItem('stoek_premium_bank_deposits')) || [];
+            myTransfers = JSON.parse(localStorage.getItem('stoek_premium_transfers')) || [];
+            myCommercials = JSON.parse(localStorage.getItem('stoek_premium_commercials')) || ["KDO NUMERICA", "KDO ACCESS", "KDO HORIZON"];
+        };
 
         const bootstrapSaleModal = new bootstrap.Modal(document.getElementById('saleModal'));
         const bootstrapEditSaleModal = new bootstrap.Modal(document.getElementById('editSaleModal'));
@@ -747,7 +767,6 @@
             updateCommercialDropdowns();
         }
 
-        // Met à jour les listes déroulantes des vendeurs partout
         function updateCommercialDropdowns() {
             const saleSelect = document.getElementById('saleCommercialSelect');
             const editSelect = document.getElementById('editSaleCommercialSelect');
@@ -769,17 +788,17 @@
 
         window.saveStructureConfig = function() {
             const val = document.getElementById('structureInput').value;
-            localStorage.setItem('stoek_premium_structure', val);
+            setLocalAndCloud('stoek_premium_structure', val);
         };
 
         window.saveAgencyConfig = function() {
             const val = document.getElementById('agencyInput').value;
-            localStorage.setItem('stoek_premium_agency', val);
+            setLocalAndCloud('stoek_premium_agency', val);
         };
 
         window.saveInitialCashConfig = function() {
             const val = parseFloat(document.getElementById('initialCashInput').value) || 0;
-            localStorage.setItem('stoek_premium_initial_cash', val);
+            setLocalAndCloud('stoek_premium_initial_cash', val.toString());
             calculateGlobalCashDesk(); 
         };
 
@@ -797,8 +816,8 @@
         window.restoreDefaultStock = function() {
             if(confirm("Attention : Cela va remplacer votre stock actuel par la liste des 28 articles de base. Voulez-vous continuer ?")) {
                 myStock = [...initialExcelDatabase];
-                localStorage.setItem('stoek_premium_inventory', JSON.stringify(myStock));
-                localStorage.setItem('mystok_initialized_v2', 'true');
+                setLocalAndCloud('stoek_premium_inventory', myStock);
+                setLocalAndCloud('mystok_initialized_v2', 'true');
                 displayStock();
             }
         };
@@ -838,7 +857,6 @@
                 if (catFilter !== "ALL" && product.category !== catFilter) return;
                 if (statusFilter !== "ALL" && product.status !== statusFilter) return;
 
-                // NOUVEAU : Affichage du bouton approprié (Vendre ou Réparer)
                 let actionButtonsHTML = '';
                 if(product.status === 'Défectueux') {
                     actionButtonsHTML = `
@@ -885,7 +903,7 @@
             document.getElementById('categoryBreakdown').innerHTML = `<span class="sub-stat">Laptops: ${catTotals.Laptop}</span><span class="sub-stat">Consom.: ${catTotals.Consommables}</span><span class="sub-stat">Tél.: ${catTotals.Téléphone}</span>`;
             document.getElementById('brandBreakdown').innerHTML = `<span class="sub-stat">Lenovo: ${brandTotals.Lenovo}</span><span class="sub-stat">Dell: ${brandTotals.Dell}</span><span class="sub-stat">HP: ${brandTotals.HP}</span><span class="sub-stat">Acer: ${brandTotals.Acer}</span>`;
 
-            localStorage.setItem('stoek_premium_inventory', JSON.stringify(myStock));
+            setLocalAndCloud('stoek_premium_inventory', myStock);
             calculateGlobalCashDesk();
         }
 
@@ -907,7 +925,6 @@
             }
         };
 
-        // GESTION DES RÉPARATIONS D'ARTICLES DÉFECTUEUX
         window.openRepairModal = function(idx) {
             const p = myStock[idx];
             if(p.quantity <= 0) { alert("Aucun stock défectueux à réparer."); return; }
@@ -925,17 +942,12 @@
             const p = myStock[idx];
 
             if(repairQty > 0 && repairQty <= p.quantity) {
-                // 1. Déduire des défectueux
                 p.quantity -= repairQty;
-
-                // 2. Chercher si le même article existe en statut "Normal"
                 const normalEquivalentIndex = myStock.findIndex(item => item.name === p.name && item.status === 'Normal');
                 
                 if (normalEquivalentIndex !== -1) {
-                    // Si oui, on augmente juste la quantité
                     myStock[normalEquivalentIndex].quantity += repairQty;
                 } else {
-                    // Sinon, on crée une nouvelle ligne avec le statut Normal
                     myStock.unshift({
                         ref: p.ref,
                         name: p.name,
@@ -946,7 +958,7 @@
                     });
                 }
 
-                localStorage.setItem('stoek_premium_inventory', JSON.stringify(myStock));
+                setLocalAndCloud('stoek_premium_inventory', myStock);
                 bootstrapRepairModal.hide();
                 displayStock();
                 alert(`Succès ! ${repairQty} article(s) ont été réintégré(s) dans le stock normal.`);
@@ -988,12 +1000,11 @@
                     alert("Veuillez saisir le nom du vendeur !");
                     return;
                 }
-                // NOUVEAU : Sauvegarde du vendeur s'il est nouveau
                 const upperComm = commercial.toUpperCase();
                 const exist = myCommercials.find(c => c.toUpperCase() === upperComm);
                 if(!exist) {
                     myCommercials.push(commercial);
-                    localStorage.setItem('stoek_premium_commercials', JSON.stringify(myCommercials));
+                    setLocalAndCloud('stoek_premium_commercials', myCommercials);
                     updateCommercialDropdowns();
                 }
             }
@@ -1011,7 +1022,7 @@
                     total: qty * price
                 };
                 mySales.push(record);
-                localStorage.setItem('stoek_premium_sales', JSON.stringify(mySales));
+                setLocalAndCloud('stoek_premium_sales', mySales);
                 bootstrapSaleModal.hide();
                 displayStock();
                 displaySales();
@@ -1043,7 +1054,7 @@
                 p.quantity -= qty;
                 const transferRecord = { date: date, destination: dest, ref: p.ref, name: p.name, quantity: qty };
                 myTransfers.push(transferRecord);
-                localStorage.setItem('stoek_premium_transfers', JSON.stringify(myTransfers));
+                setLocalAndCloud('stoek_premium_transfers', myTransfers);
                 bootstrapTransferModal.hide(); this.reset(); displayStock(); displaySales();
             } else { alert("Quantité invalide ou supérieure au stock disponible !"); }
         });
@@ -1162,7 +1173,7 @@
                     const pIdx = myStock.findIndex(p => p.ref === sale.ref);
                     if(pIdx !== -1) { myStock[pIdx].quantity += sale.quantity; }
                     mySales.splice(sIdx, 1);
-                    localStorage.setItem('stoek_premium_sales', JSON.stringify(mySales));
+                    setLocalAndCloud('stoek_premium_sales', mySales);
                     displayStock(); displaySales();
                 }
             }
@@ -1206,7 +1217,7 @@
                 const upperComm = newCommercial.toUpperCase();
                 if(!myCommercials.find(c => c.toUpperCase() === upperComm) && newCommercial !== "") {
                     myCommercials.push(newCommercial);
-                    localStorage.setItem('stoek_premium_commercials', JSON.stringify(myCommercials));
+                    setLocalAndCloud('stoek_premium_commercials', myCommercials);
                     updateCommercialDropdowns();
                 }
             }
@@ -1225,7 +1236,7 @@
                         sale.total = newQty * newPrice;
                         if(newCommercial !== "") sale.commercial = newCommercial; 
 
-                        localStorage.setItem('stoek_premium_sales', JSON.stringify(mySales));
+                        setLocalAndCloud('stoek_premium_sales', mySales);
                         bootstrapEditSaleModal.hide(); displayStock(); displaySales();
                     } else { alert("Quantité dépasse le stock !"); }
                 }
@@ -1235,12 +1246,12 @@
         document.getElementById('expenseForm').addEventListener('submit', function(e) {
             e.preventDefault();
             myExpenses.push({ date: document.getElementById('expDate').value, description: document.getElementById('expDesc').value, amount: parseFloat(document.getElementById('expAmount').value) });
-            localStorage.setItem('stoek_premium_expenses', JSON.stringify(myExpenses));
+            setLocalAndCloud('stoek_premium_expenses', myExpenses);
             bootstrapExpenseModal.hide(); this.reset(); displaySales();
         });
 
         window.deleteExpense = function(idx) {
-            if(confirm("Supprimer cette charge ?")) { myExpenses.splice(idx, 1); localStorage.setItem('stoek_premium_expenses', JSON.stringify(myExpenses)); displaySales(); }
+            if(confirm("Supprimer cette charge ?")) { myExpenses.splice(idx, 1); setLocalAndCloud('stoek_premium_expenses', myExpenses); displaySales(); }
         };
 
         document.getElementById('bankForm').addEventListener('submit', function(e) {
@@ -1249,12 +1260,12 @@
             const amountToDeposit = parseFloat(document.getElementById('bankAmount').value);
             if(amountToDeposit > currentCash) { alert("ERREUR : Fonds insuffisants en caisse."); return; }
             myBankDeposits.push({ date: document.getElementById('bankDate').value, description: document.getElementById('bankDesc').value, amount: amountToDeposit });
-            localStorage.setItem('stoek_premium_bank_deposits', JSON.stringify(myBankDeposits));
+            setLocalAndCloud('stoek_premium_bank_deposits', myBankDeposits);
             bootstrapBankModal.hide(); this.reset(); displaySales();
         });
 
         window.deleteBankDeposit = function(idx) {
-            if(confirm("Supprimer ce versement ?")) { myBankDeposits.splice(idx, 1); localStorage.setItem('stoek_premium_bank_deposits', JSON.stringify(myBankDeposits)); displaySales(); }
+            if(confirm("Supprimer ce versement ?")) { myBankDeposits.splice(idx, 1); setLocalAndCloud('stoek_premium_bank_deposits', myBankDeposits); displaySales(); }
         };
 
         document.getElementById('productForm').addEventListener('submit', function(e) {
@@ -1270,7 +1281,6 @@
             if(confirm("Supprimer définitivement cet article ?")) { myStock.splice(index, 1); displayStock(); }
         };
 
-        // GESTION DU RAPPORT PDF ENTIÈREMENT REFONDU POUR UN ALIGNEMENT PARFAIT
         window.downloadPDFReport = function() {
             const filter = document.getElementById('reportFilter').value;
             const customDate = document.getElementById('customDateInput').value;
@@ -1320,7 +1330,6 @@
             document.getElementById('pdfExpenses').innerText = document.getElementById('expensesDisplay').innerText;
             document.getElementById('pdfNet').innerText = document.getElementById('netDisplay').innerText;
 
-            // Définition de la période (start/end) pour extraire les bonnes données pour les tableaux PDF
             let start = new Date(0), end = new Date(); end.setHours(23,59,59,999);
             const current = new Date();
             if(filter === 'today') { start = new Date(); start.setHours(0,0,0,0); } 
@@ -1329,7 +1338,6 @@
             else if(filter === 'month') { start = new Date(current.getFullYear(), current.getMonth(), 1); } 
             else if(filter === 'custom' && customDate) { start = new Date(customDate); start.setHours(0,0,0,0); end = new Date(customDate); end.setHours(23,59,59,999); }
 
-            // 1. Génération du tableau des Ventes (SANS la référence, colonnes parfaitement alignées)
             const pdfSalesBody = document.getElementById('pdfSalesTableBody');
             pdfSalesBody.innerHTML = '';
             let salesCount = 0;
@@ -1349,7 +1357,6 @@
             });
             document.getElementById('pdf-sales-section').style.display = salesCount > 0 ? 'block' : 'none';
 
-            // 2. Génération du tableau des Dépenses
             const pdfExpBody = document.getElementById('pdfExpensesTableBody');
             pdfExpBody.innerHTML = '';
             let expCount = 0;
@@ -1367,7 +1374,6 @@
             });
             document.getElementById('pdf-expenses-section').style.display = expCount > 0 ? 'block' : 'none';
 
-            // 3. Génération du tableau Banque
             const pdfBankBody = document.getElementById('pdfBankTableBody');
             pdfBankBody.innerHTML = '';
             let bankCount = 0;
@@ -1385,7 +1391,6 @@
             });
             document.getElementById('pdf-bank-section').style.display = bankCount > 0 ? 'block' : 'none';
 
-            // 4. Génération du tableau Transferts
             const pdfTransfersBody = document.getElementById('pdfTransfersTableBody');
             pdfTransfersBody.innerHTML = '';
             let trCount = 0;
@@ -1404,7 +1409,6 @@
             });
             document.getElementById('pdf-transfers-section').style.display = trCount > 0 ? 'block' : 'none';
 
-            // Démarrage de la génération PDF
             const element = document.getElementById('pdf-report-container'); 
             element.classList.remove('d-none');
             
@@ -1419,6 +1423,7 @@
             });
         };
 
+        // On initialise avec les données locales immédiatement
         initConfigurationFields();
         displayStock();
         displaySales();
@@ -1427,6 +1432,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAYcjkrXKcjqFnf8E91JZWU1lMGS-yxSOU",
@@ -1439,13 +1445,69 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        window.currentUser = null;
+
+        // Fonction d'envoi vers Firestore
+        window.syncToCloud = async function(key, strValue) {
+            if (!window.currentUser) return;
+            try {
+                await setDoc(doc(db, "users", window.currentUser.uid, "dashboardData", key), { value: strValue });
+            } catch (error) {
+                console.error("Erreur de sauvegarde Cloud:", error);
+            }
+        };
+
+        // Fonction de téléchargement depuis Firestore vers localStorage
+        async function syncCloudToLocal() {
+            if (!window.currentUser) return;
+            try {
+                const keysToSync = [
+                    'mystok_initialized_v2', 'stoek_premium_inventory', 'stoek_premium_sales', 
+                    'stoek_premium_expenses', 'stoek_premium_bank_deposits', 'stoek_premium_transfers', 
+                    'stoek_premium_commercials', 'stoek_premium_structure', 'stoek_premium_agency', 
+                    'stoek_premium_initial_cash'
+                ];
+                let cloudDataFound = false;
+
+                for (const k of keysToSync) {
+                    const docRef = doc(db, "users", window.currentUser.uid, "dashboardData", k);
+                    const snap = await getDoc(docRef);
+                    if (snap.exists()) {
+                        // On écrase le local avec ce qui vient du Cloud
+                        localStorage.setItem(k, snap.data().value);
+                        cloudDataFound = true;
+                    } else {
+                        // S'il n'y a rien dans le cloud (nouveau pc), on envoie les données locales
+                        const localData = localStorage.getItem(k);
+                        if (localData) {
+                            window.syncToCloud(k, localData);
+                        }
+                    }
+                }
+
+                // Si on a ramené des données, on rafraîchit l'affichage !
+                if (cloudDataFound && window.refreshDataFromLocal) {
+                    window.refreshDataFromLocal();
+                    window.displayStock();
+                    window.displaySales();
+                }
+            } catch (err) {
+                console.error("Erreur de synchronisation Cloud -> Local:", err);
+            }
+        }
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
+                window.currentUser = user;
                 const userName = user.displayName || user.email.split('@')[0];
                 document.getElementById('navUserName').innerText = userName;
                 document.getElementById('pdfTopUserName').innerText = userName;
                 document.getElementById('pdfBottomUserName').innerText = userName;
+
+                // Lancement de la synchro en arrière plan
+                syncCloudToLocal();
             } else {
                 window.location.href = "index.html";
             }
