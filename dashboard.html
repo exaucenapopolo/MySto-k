@@ -20,7 +20,8 @@
         .nav-tabs .nav-link.active { color: #0d6efd; border-bottom: 3px solid #0d6efd; }
         .sub-stat { font-size: 0.8rem; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px; margin-right: 5px; display: inline-block; margin-top: 5px;}
         #pdf-report-container { padding: 20px; background: #fff; }
-        .fab-btn { position: fixed; bottom: 20px; right: 20px; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: transform 0.2s; }
+        .fab-container { position: fixed; bottom: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
+        .fab-btn { box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: transform 0.2s; display: flex; align-items: center; justify-content: center; }
         .fab-btn:hover { transform: scale(1.05); }
     </style>
 </head>
@@ -44,6 +45,11 @@
 
     <div class="bg-white border-bottom py-2 px-4 mb-4 d-flex flex-wrap justify-content-between align-items-center gap-3 shadow-sm">
         <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-building text-success fs-5"></i>
+            <span class="fw-bold text-secondary small">Structure :</span>
+            <input type="text" id="structureInput" class="form-control form-control-sm border-success fw-bold" style="max-width: 250px;" placeholder="Ex: KDO INFORMATIQUE..." onchange="saveStructureConfig()">
+        </div>
+        <div class="d-flex align-items-center gap-2">
             <i class="bi bi-geo-alt-fill text-danger fs-5"></i>
             <span class="fw-bold text-secondary small">Agence / Ville :</span>
             <input type="text" id="agencyInput" class="form-control form-control-sm border-primary fw-bold" style="max-width: 180px;" onchange="saveAgencyConfig()">
@@ -55,7 +61,7 @@
             <span class="text-muted small fw-bold">XAF</span>
         </div>
         <div class="bg-dark text-white rounded px-3 py-1-5 small fw-bold shadow-sm" title="Argent total depuis le premier jour">
-            <i class="bi bi-cash-stack text-info me-2 fs-6"></i>SOLDE RÉEL ACTUEL EN CAISSE : <span id="globalCashDeskDisplay" class="text-info fs-6">0 XAF</span>
+            <i class="bi bi-cash-stack text-info me-2 fs-6"></i>SOLDE RÉEL ACTUEL : <span id="globalCashDeskDisplay" class="text-info fs-6">0 XAF</span>
         </div>
     </div>
 
@@ -76,7 +82,6 @@
 
         <div class="tab-content" id="myTabContent">
             
-            <!-- ONGLET INVENTAIRE -->
             <div class="tab-pane fade show active" id="inventory" role="tabpanel">
                 <div class="row mb-4">
                     <div class="col-md-4 mb-3">
@@ -205,7 +210,6 @@
                 </div>
             </div>
 
-            <!-- ONGLET RAPPORTS & VENTES -->
             <div class="tab-pane fade" id="sales" role="tabpanel">
                 
                 <div class="row mb-4">
@@ -277,6 +281,7 @@
                                             <th>Date & Heure</th>
                                             <th>Réf</th>
                                             <th>Article</th>
+                                            <th>Vendeur</th>
                                             <th class="text-center">Qté</th>
                                             <th class="text-end">P.U Vente</th>
                                             <th class="text-end">Total Vente</th>
@@ -353,11 +358,15 @@
         </div>
     </div>
 
-    <a href="rapport.html" class="btn btn-dark text-white rounded-pill px-4 py-2 fab-btn">
-        <i class="bi bi-file-person me-2"></i>Rapport Personnel
-    </a>
+    <div class="fab-container">
+        <a href="about.html" class="btn btn-primary text-white rounded-pill px-4 py-2 fab-btn shadow">
+            <i class="bi bi-info-circle me-2"></i>C'est quoi MySto€k
+        </a>
+        <a href="rapport.html" class="btn btn-dark text-white rounded-pill px-4 py-2 fab-btn shadow">
+            <i class="bi bi-file-person me-2"></i>Rapport Personnel
+        </a>
+    </div>
 
-    <!-- MODALS -->
     <div class="modal fade" id="saleModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -371,6 +380,19 @@
                     <div class="mb-3">
                         <label class="form-label">Stock dispo : <strong id="saleItemStock" class="text-danger"></strong></label>
                     </div>
+                    
+                    <div class="mb-3 border border-success p-2 rounded bg-light">
+                        <label class="form-label fw-bold text-success">Nom du vendeur (Commercial) *</label>
+                        <select id="saleCommercialSelect" class="form-select mb-2 border-success" onchange="toggleCustomCommercial('saleCommercialSelect', 'saleCommercialCustom')" required>
+                            <option value="">-- Sélectionner un vendeur --</option>
+                            <option value="KDO NUMERICA">KDO NUMERICA</option>
+                            <option value="KDO ACCESS">KDO ACCESS</option>
+                            <option value="KDO HORIZON">KDO HORIZON</option>
+                            <option value="AUTRE">Autre (Saisir manuellement)</option>
+                        </select>
+                        <input type="text" id="saleCommercialCustom" class="form-control d-none border-success" placeholder="Saisir le nom du vendeur...">
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label fw-bold">Quantité vendue</label>
                         <input type="number" id="saleQuantity" class="form-control" min="1" value="1">
@@ -398,6 +420,18 @@
                 <div class="modal-body">
                     <input type="hidden" id="editSaleId">
                     <h6 id="editSaleName" class="text-warning mb-3 fw-bold"></h6>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Modifier le vendeur</label>
+                        <select id="editSaleCommercialSelect" class="form-select mb-2" onchange="toggleCustomCommercial('editSaleCommercialSelect', 'editSaleCommercialCustom')">
+                            <option value="KDO NUMERICA">KDO NUMERICA</option>
+                            <option value="KDO ACCESS">KDO ACCESS</option>
+                            <option value="KDO HORIZON">KDO HORIZON</option>
+                            <option value="AUTRE">Autre (Saisir manuellement)</option>
+                        </select>
+                        <input type="text" id="editSaleCommercialCustom" class="form-control d-none" placeholder="Saisir le nom du vendeur...">
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label fw-bold">Modifier la quantité vendue</label>
                         <input type="number" id="editSaleQuantity" class="form-control" min="1">
@@ -513,12 +547,11 @@
         </div>
     </div>
 
-    <!-- STRUCTURE DU PDF -->
     <div id="pdf-report-container" class="d-none" style="font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; color: #333;">
         
         <div style="text-align: center; border-bottom: 4px solid #f39c12; padding-bottom: 15px; margin-bottom: 20px; background-color: #fdfaf6; padding-top: 20px; border-radius: 8px 8px 0 0;">
-            <img src="https://raw.githubusercontent.com/exaucenapopolo/MySto-k/refs/heads/main/logo%20mystok.png" alt="MySto€k Logo" crossorigin="anonymous" style="height: 50px; margin-bottom: 10px;">
-            <h2 style="color: #2c3e50; margin: 0; font-weight: 800;">MySto€k</h2>
+            <img src="https://raw.githubusercontent.com/exaucenapopolo/MySto-k/refs/heads/main/logo%20mystok.png" alt="Logo" crossorigin="anonymous" style="height: 50px; margin-bottom: 10px;">
+            <h2 id="pdfStructureName" style="color: #2c3e50; margin: 0; font-weight: 800;">MySto€k</h2>
             
             <h5 style="color: #2980b9; margin-top: 5px; font-weight: bold;">Géré et édité par : <span id="pdfTopUserName"></span></h5>
             <h4 style="margin-top: 10px; color: #2c3e50;">RAPPORT DE COMPTABILITÉ - AGENCE : <span id="pdfAgencyLabel" style="color: #2980b9;"></span></h4>
@@ -567,6 +600,7 @@
                     <tr style="background-color: #27ae60; color: white;">
                         <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Date</th>
                         <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Article</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Vendeur</th>
                         <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Qté</th>
                         <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Total (XAF)</th>
                     </tr>
@@ -605,7 +639,7 @@
         </div>
 
         <div style="margin-top: 40px; text-align: center; font-size: 0.8rem; color: #95a5a6; border-top: 1px solid #ecf0f1; padding-top: 15px;">
-            <p style="margin: 0;">Généré par <strong>MySto€k</strong> - Gestion de stock intelligente et sécurisée</p>
+            <p style="margin: 0;">Généré par <strong id="pdfFooterStructureName">MySto€k</strong> - Gestion de stock intelligente et sécurisée</p>
             <p style="margin-top: 10px; font-size: 0.7rem; color: #bdc3c7;">Opérateur système : <span id="pdfBottomUserName"></span></p>
         </div>
 
@@ -645,18 +679,14 @@
             { ref: "0028", name: "Téléphone Huawei", category: "Téléphone", quantity: 3, price: 0, status: "Défectueux" }
         ];
 
-        // --- LA NOUVELLE LOGIQUE EST ICI ---
-        // On vérifie si c'est la toute première fois qu'on lance la "version 2"
         let hasInitialized = localStorage.getItem('mystok_initialized_v2');
         let myStock = JSON.parse(localStorage.getItem('stoek_premium_inventory')) || [];
         
-        // Si ce n'est pas initialisé, on force l'injection des 28 articles !
         if (!hasInitialized) {
             myStock = [...initialExcelDatabase];
-            localStorage.setItem('mystok_initialized_v2', 'true'); // On indique que c'est fait
+            localStorage.setItem('mystok_initialized_v2', 'true');
             localStorage.setItem('stoek_premium_inventory', JSON.stringify(myStock));
         }
-        // ------------------------------------
 
         let mySales = JSON.parse(localStorage.getItem('stoek_premium_sales')) || [];
         let myExpenses = JSON.parse(localStorage.getItem('stoek_premium_expenses')) || [];
@@ -672,9 +702,16 @@
         const formatCurrency = (amount) => new Intl.NumberFormat('fr-FR').format(amount) + " XAF";
 
         function initConfigurationFields() {
+            document.getElementById('structureInput').value = localStorage.getItem('stoek_premium_structure') || "";
             document.getElementById('agencyInput').value = localStorage.getItem('stoek_premium_agency') || "Yaoundé";
             document.getElementById('initialCashInput').value = localStorage.getItem('stoek_premium_initial_cash') || "0";
         }
+
+        // NOUVEAU: Sauvegarder la structure
+        window.saveStructureConfig = function() {
+            const val = document.getElementById('structureInput').value;
+            localStorage.setItem('stoek_premium_structure', val);
+        };
 
         window.saveAgencyConfig = function() {
             const val = document.getElementById('agencyInput').value;
@@ -698,7 +735,6 @@
             return currentCashDesk;
         }
 
-        // --- NOUVELLE FONCTION POUR LE BOUTON "STOCK PAR DÉFAUT" ---
         window.restoreDefaultStock = function() {
             if(confirm("Attention : Cela va remplacer votre stock actuel par la liste des 28 articles de base. Voulez-vous continuer ?")) {
                 myStock = [...initialExcelDatabase];
@@ -707,7 +743,6 @@
                 displayStock();
             }
         };
-        // -----------------------------------------------------------
 
         window.displayStock = function() {
             const tbody = document.getElementById('stockTableBody');
@@ -791,6 +826,17 @@
             }
         };
 
+        // Fonction pour afficher/masquer la saisie manuelle du commercial
+        window.toggleCustomCommercial = function(selectId, inputId) {
+            const val = document.getElementById(selectId).value;
+            const customInput = document.getElementById(inputId);
+            if (val === 'AUTRE') {
+                customInput.classList.remove('d-none');
+            } else {
+                customInput.classList.add('d-none');
+            }
+        };
+
         window.openSaleModal = function(idx) {
             const p = myStock[idx];
             if(p.quantity <= 0) { alert("Stock insuffisant !"); return; }
@@ -799,6 +845,12 @@
             document.getElementById('saleItemStock').innerText = p.quantity;
             document.getElementById('saleQuantity').value = 1;
             document.getElementById('salePrice').value = p.price;
+            
+            // Réinitialisation du commercial à l'ouverture
+            document.getElementById('saleCommercialSelect').value = "";
+            document.getElementById('saleCommercialCustom').value = "";
+            document.getElementById('saleCommercialCustom').classList.add('d-none');
+
             bootstrapSaleModal.show();
         };
 
@@ -808,6 +860,20 @@
             const price = parseFloat(document.getElementById('salePrice').value);
             const p = myStock[idx];
 
+            // Validation du nom du vendeur
+            let commercial = document.getElementById('saleCommercialSelect').value;
+            if (commercial === "") {
+                alert("Veuillez obligatoirement sélectionner ou saisir le nom du vendeur !");
+                return;
+            }
+            if (commercial === 'AUTRE') {
+                commercial = document.getElementById('saleCommercialCustom').value.trim();
+                if (commercial === "") {
+                    alert("Veuillez saisir le nom du vendeur !");
+                    return;
+                }
+            }
+
             if(qty > 0 && qty <= p.quantity) {
                 p.quantity -= qty;
                 const record = {
@@ -815,6 +881,7 @@
                     date: new Date().toISOString(),
                     ref: p.ref,
                     name: p.name,
+                    commercial: commercial, // On sauvegarde le vendeur ici
                     quantity: qty,
                     price: price,
                     total: qty * price
@@ -883,11 +950,15 @@
                 const sDate = new Date(sale.date);
                 if(sDate >= start && sDate <= end) {
                     totalRev += sale.total; itemsCount += sale.quantity;
+                    // On gère les anciens enregistrements qui n'avaient peut-être pas de vendeur
+                    const vendeurDisplay = sale.commercial ? `<span class="badge bg-primary">${sale.commercial}</span>` : '<span class="text-muted small">Non renseigné</span>';
+                    
                     tbodySales.innerHTML += `
                         <tr>
                             <td class="text-muted small">${sDate.toLocaleDateString('fr-FR')} ${sDate.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})}</td>
                             <td class="fw-bold text-secondary">${sale.ref}</td>
                             <td>${sale.name}</td>
+                            <td>${vendeurDisplay}</td>
                             <td class="text-center fw-bold">${sale.quantity}</td>
                             <td class="text-end">${formatCurrency(sale.price)}</td>
                             <td class="text-end fw-bold text-success">${formatCurrency(sale.total)}</td>
@@ -981,6 +1052,23 @@
                 document.getElementById('editSaleName').innerText = sale.name;
                 document.getElementById('editSaleQuantity').value = sale.quantity;
                 document.getElementById('editSalePrice').value = sale.price;
+                
+                // Remplissage du commercial existant
+                const select = document.getElementById('editSaleCommercialSelect');
+                const customInput = document.getElementById('editSaleCommercialCustom');
+                
+                if (sale.commercial && Array.from(select.options).some(opt => opt.value === sale.commercial)) {
+                    select.value = sale.commercial;
+                    customInput.classList.add('d-none');
+                } else if (sale.commercial) {
+                    select.value = "AUTRE";
+                    customInput.value = sale.commercial;
+                    customInput.classList.remove('d-none');
+                } else {
+                    select.value = "KDO NUMERICA"; // Valeur par défaut
+                    customInput.classList.add('d-none');
+                }
+
                 bootstrapEditSaleModal.show();
             }
         };
@@ -989,6 +1077,13 @@
             const sId = document.getElementById('editSaleId').value;
             const newQty = parseInt(document.getElementById('editSaleQuantity').value);
             const newPrice = parseFloat(document.getElementById('editSalePrice').value);
+            
+            // Récupération du commercial modifié
+            let newCommercial = document.getElementById('editSaleCommercialSelect').value;
+            if (newCommercial === 'AUTRE') {
+                newCommercial = document.getElementById('editSaleCommercialCustom').value.trim();
+            }
+
             const sIdx = mySales.findIndex(s => s.id === sId);
             if(sIdx !== -1 && newQty > 0) {
                 const sale = mySales[sIdx];
@@ -998,7 +1093,11 @@
                     const stockMax = p.quantity + sale.quantity;
                     if(newQty <= stockMax) {
                         p.quantity = stockMax - newQty;
-                        sale.quantity = newQty; sale.price = newPrice; sale.total = newQty * newPrice;
+                        sale.quantity = newQty; 
+                        sale.price = newPrice; 
+                        sale.total = newQty * newPrice;
+                        if(newCommercial !== "") sale.commercial = newCommercial; // Mise à jour vendeur
+
                         localStorage.setItem('stoek_premium_sales', JSON.stringify(mySales));
                         bootstrapEditSaleModal.hide(); displayStock(); displaySales();
                     } else { alert("Quantité dépasse le stock !"); }
@@ -1047,7 +1146,13 @@
         window.downloadPDFReport = function() {
             const filter = document.getElementById('reportFilter').value;
             const customDate = document.getElementById('customDateInput').value;
+            
+            // Récupération dynamique du nom de la structure pour le PDF
+            const currentStructure = localStorage.getItem('stoek_premium_structure') || "MySto€k";
             const currentAgency = localStorage.getItem('stoek_premium_agency') || "Non définie";
+            
+            document.getElementById('pdfStructureName').innerText = currentStructure;
+            document.getElementById('pdfFooterStructureName').innerText = currentStructure;
             document.getElementById('pdfAgencyLabel').innerText = currentAgency;
             
             let dateText = "Historique complet";
@@ -1075,6 +1180,7 @@
                     document.getElementById(sectionId).style.display = 'block';
                     rows.forEach(tr => {
                         let trClone = tr.cloneNode(true);
+                        // On supprime la colonne des actions (boutons) sauf si on demande explicitement de la garder
                         if(!keepLastChild && trClone.lastElementChild) trClone.removeChild(trClone.lastElementChild);
                         targetBody.appendChild(trClone);
                     });
@@ -1088,7 +1194,7 @@
 
             const element = document.getElementById('pdf-report-container'); element.classList.remove('d-none');
             html2pdf().set({
-                margin: 10, filename: 'Rapport_MyStoek_' + currentAgency.replace(/[^a-z0-9]/gi, '_') + '_' + Date.now() + '.pdf',
+                margin: 10, filename: 'Rapport_' + currentStructure.replace(/[^a-z0-9]/gi, '_') + '_' + currentAgency.replace(/[^a-z0-9]/gi, '_') + '_' + Date.now() + '.pdf',
                 image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             }).from(element).save().then(() => { element.classList.add('d-none'); });
         };
@@ -1098,7 +1204,6 @@
         displaySales();
     </script>
 
-    <!-- INTÉGRATION FIREBASE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
